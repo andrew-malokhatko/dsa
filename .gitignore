@@ -1,1 +1,4 @@
 out/
+.vs/
+tests/resources/
+CMakeSettings.json

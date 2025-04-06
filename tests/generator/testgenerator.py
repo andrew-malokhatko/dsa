@@ -29,14 +29,14 @@ def generate_test_case(n_ops, operation_list, test_set):
 
 
 test_set = set()  # Tracks keys currently in the data structure
-testInsert = generate_test_case(TEST_COUNT * 1000, ["INSERT"], test_set)
+testInsert = generate_test_case(1000, ["INSERT"], test_set)
 print(len(test_set))
-testSearch = generate_test_case(int(TEST_COUNT * 1000), ["SEARCH"], test_set)
+testSearch = generate_test_case(1000, ["DELETE"], test_set)
 print(len(test_set))
 
 test = testInsert + testSearch
 
-with open("../resources/perfSearchTest.txt", "w") as f:
+with open("../resources/removeTest.txt", "w") as f:
     for op in test:
         f.write(op + "\n")
     f.write(str(sorted(test_set)) + '\n')

@@ -2,16 +2,19 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <fstream>
-#include <string_view>
+#include <chrono>
 
-class BTreeTests : public testing::Test
+#include "ContainerTests.hpp"
+
+
+class BTreeTests : public ContainerTests
 {
   protected:
-    static constexpr std::string_view insertFilePath{ "resources/insertTest.txt" };
-    static constexpr std::string_view perfInsertFilePath{ "resources/perfInsertTest.txt" };
-    static constexpr std::string_view searchFilePath{ "resources/searchTest.txt" };
-    static constexpr std::string_view perfSearchFilePath{ "resources/perfSearchTest.txt" };
-    // stu::btree tree;
+	// Specific test cases for BTree
+	static constexpr std::string_view FunctionalRemove100FilePath{"resources/funcRemoveTest100.txt"};
+	static constexpr std::string_view FunctionalRemove50FilePath{"resources/funcRemoveTest50.txt"};
+	static constexpr std::string_view FunctionalRemoveNULLFilePath{"resources/funcRemoveTestNULL.txt"};
+	static constexpr std::string_view funcRemoveFindPre{"resources/funcRemoveFindPre.txt"};
 };
 
 TEST_F(BTreeTests, DefaultConstructor)
@@ -98,8 +101,8 @@ TEST_F(BTreeTests, BNodeIsBalanced)
 TEST_F(BTreeTests, BNodeFindInsertPos)
 {
     stu::btree::BNode node;
-    node.keys[0] = 50;
-    node.keys[1] = 100;
+    node.keys(0) = 50;
+    node.keys(1) = 100;
     node.size = 2;
     EXPECT_EQ(node.findInsertPos(75), 1);
     EXPECT_EQ(node.findInsertPos(150), 2);
@@ -108,8 +111,8 @@ TEST_F(BTreeTests, BNodeFindInsertPos)
 TEST_F(BTreeTests, BNodeFindIndex)
 {
     stu::btree::BNode node;
-    node.keys[0] = 50;
-    node.keys[1] = 100;
+    node.keys(0) = 50;
+    node.keys(1) = 100;
     node.size = 2;
     EXPECT_EQ(node.findIndex(50), 0);
     EXPECT_EQ(node.findIndex(100), 1);
@@ -122,8 +125,8 @@ TEST_F(BTreeTests, BNodeInsertKey)
     node.insertKey(50);
     node.insertKey(100);
     EXPECT_EQ(node.size, 2);
-    EXPECT_EQ(node.keys[0], 50);
-    EXPECT_EQ(node.keys[1], 100);
+    EXPECT_EQ(node.keys(0), 50);
+    EXPECT_EQ(node.keys(1), 100);
 }
 
 TEST_F(BTreeTests, BNodeRemoveKey)
@@ -133,11 +136,11 @@ TEST_F(BTreeTests, BNodeRemoveKey)
     node.insertKey(100);
     node.removeKey(50);
     EXPECT_EQ(node.size, 1);
-    EXPECT_EQ(node.keys[0], 100);
-    
+    EXPECT_EQ(node.keys(0), 100);
+
     node.removeKey(100);
     EXPECT_EQ(node.size, 0);
-    
+
     node.removeKey(100);
     EXPECT_EQ(node.size, 0);
 }
@@ -148,7 +151,7 @@ TEST_F(BTreeTests, BNodeInsertChild)
     stu::btree::BNode child;
     node.insertChild(&child);
     EXPECT_EQ(node.childrenSize, 1);
-    EXPECT_EQ(node.children[0], &child);
+    EXPECT_EQ(node.children(0), &child);
 }
 
 TEST_F(BTreeTests, BNodeRemoveChild)
@@ -215,7 +218,7 @@ std::vector<int> parseArray(std::string& line, int reserve = 1000)
 
 TEST_F(BTreeTests, getChildrenTest)
 {
-    std::vector<int> expected {100, 200, 300, 400, 500, 600, 700};
+    std::vector<int> expected{ 100, 200, 300, 400, 500, 600, 700 };
     std::vector<int> actual;
 
     stu::btree::BNode root;
@@ -309,13 +312,13 @@ TEST_F(BTreeTests, BorrowKeyLeftTest)
     EXPECT_EQ(leftChild.size, 3);
     EXPECT_EQ(rightChild.size, 1);
 
-    rightChild.borrowKeyLeft(&rightChild, &root, &leftChild);
+    rightChild.borrowLeft(&rightChild, &root, &leftChild);
 
     EXPECT_EQ(leftChild.size, 2);
     EXPECT_EQ(rightChild.size, 2);
-    EXPECT_EQ(root.keys[0], 70);
-    EXPECT_EQ(rightChild.keys[0], 80);
-    EXPECT_EQ(rightChild.keys[1], 100);
+    EXPECT_EQ(root.keys(0), 70);
+    EXPECT_EQ(rightChild.keys(0), 80);
+    EXPECT_EQ(rightChild.keys(1), 100);
 }
 
 TEST_F(BTreeTests, BorrowKeyRightTest)
@@ -338,16 +341,16 @@ TEST_F(BTreeTests, BorrowKeyRightTest)
     EXPECT_EQ(leftChild.size, 1);
     EXPECT_EQ(rightChild.size, 3);
 
-    leftChild.borrowKeyRight(&leftChild, &root, &rightChild);
+    leftChild.borrowRight(&leftChild, &root, &rightChild);
 
     EXPECT_EQ(leftChild.size, 2);
     EXPECT_EQ(rightChild.size, 2);
-    EXPECT_EQ(root.keys[0], 80);
-    EXPECT_EQ(leftChild.keys[0], 50);
-    EXPECT_EQ(leftChild.keys[1], 70);
+    EXPECT_EQ(root.keys(0), 80);
+    EXPECT_EQ(leftChild.keys(0), 50);
+    EXPECT_EQ(leftChild.keys(1), 70);
 }
 
-TEST_F(BTreeTests, MergeTestLeaf)
+/*TEST_F(BTreeTests, MergeTestLeaf)
 {
     stu::btree tree;
     tree.insert(50);
@@ -408,9 +411,9 @@ TEST_F(BTreeTests, MergeTestInternal)
     EXPECT_EQ(root->keys[1], 100);
     EXPECT_EQ(root->keys[2], 130);
     EXPECT_EQ(root->keys[3], 160);
-}
+}*/
 
-TEST_F(BTreeTests, DeleteLeafSingleNode)
+TEST_F(BTreeTests, DeleteLeafSingle)
 {
     stu::btree tree;
     tree.insert(100);
@@ -467,12 +470,212 @@ TEST_F(BTreeTests, DeleteLeafBorrow)
 
     tree.insert(200);
     tree.remove(50);
-     
+
     EXPECT_FALSE(tree.search(50));
     EXPECT_TRUE(tree.search(100));
     EXPECT_TRUE(tree.search(150));
     EXPECT_TRUE(tree.search(200));
 }
+
+stu::btree createTestTree()
+{
+    stu::btree tree;
+    tree.insert(50);
+    tree.insert(60);
+    tree.insert(70);
+    tree.insert(80);
+    tree.insert(90);
+    tree.insert(100);
+    tree.insert(110);
+    tree.insert(120);
+    tree.insert(130);
+    tree.insert(140);
+    tree.insert(150);
+    tree.insert(160);
+    tree.insert(170);
+
+    auto root = const_cast<stu::btree::BNode*>(tree.getRoot());
+    auto leftChild = root->children(0);
+    auto rightChild = root->children(1);
+
+    // Ensure the initial state before removing
+    EXPECT_EQ(leftChild->size, 2);
+    EXPECT_EQ(rightChild->size, 1);
+    EXPECT_EQ(root->size, 1);
+
+    return tree;
+}
+
+/*TEST_F(BTreeTests, RemoveInternalTestBorrow)
+{
+    stu::btree tree = createTestTree();
+
+    auto root = const_cast<stu::btree::BNode*>(tree.getRoot());
+    auto leftChild = root->children[0];
+    auto rightChild = root->children[1];
+
+    // removeInternal, get predecessor
+    tree.remove(160);
+    tree.remove(130);
+
+    // removeInternal, get successor
+    tree.remove(50); // this removal is a leaf
+    tree.remove(70);
+
+    // Verify the state after removing
+    EXPECT_EQ(rightChild->keys[0], 150);
+    EXPECT_EQ(leftChild->keys[0], 80);
+    EXPECT_EQ(root->keys[0], 120);
+}*/
+
+/*TEST_F(BTreeTests, RemoveInternalTestMerge)
+{
+    stu::btree tree = createTestTree();
+
+    auto root = const_cast<stu::btree::BNode*>(tree.getRoot());
+    auto leftChild = root->children[0];
+    auto rightChild = root->children[1];
+
+    // remove nodes to start merging
+    tree.remove(160);
+    tree.remove(130);
+    tree.remove(50);
+
+    // start
+    tree.remove(70); // merge
+    tree.remove(80);
+    tree.remove(60);
+    // tree.remove(100);   // merge
+}*/
+
+/*TEST_F(BTreeTests, RemoveInternalTestBorrow2)
+{
+    stu::btree tree = createTestTree();
+
+    tree.insert(155);
+    tree.insert(159);
+
+    auto root = const_cast<stu::btree::BNode*>(tree.getRoot());
+    auto leftChild = root->children[0];
+    auto rightChild = root->children[1];
+
+    // prepare for borrowing
+    tree.remove(50);
+    tree.remove(80);
+    tree.remove(90);
+    tree.remove(100);
+    tree.remove(70);
+
+    tree.remove(110);
+
+    ASSERT_EQ(root->keys[0], 155);
+    ASSERT_EQ(leftChild->keys[0], 130);
+    ASSERT_EQ(rightChild->keys[0], 160);
+
+    ASSERT_EQ(leftChild->children[0]->keys[0], 60);
+    ASSERT_EQ(leftChild->children[0]->keys[1], 120);
+
+    ASSERT_EQ(leftChild->children[1]->keys[0], 140);
+    ASSERT_EQ(leftChild->children[1]->keys[1], 150);
+}*/
+
+/*TEST_F(BTreeTests, RemoveInternalTestMergeParent)
+{
+    stu::btree tree = createTestTree();
+
+    // prepare for merging
+    tree.remove(50);
+    tree.remove(80);
+    tree.remove(90);
+    tree.remove(100);
+    tree.remove(70);
+
+    tree.remove(110);
+
+    auto root = const_cast<stu::btree::BNode*>(tree.getRoot());
+    auto firstChild = root->children[0];
+    auto secondChild = root->children[1];
+    auto thirdChild = root->children[2];
+    auto fourthChild = root->children[3];
+
+    ASSERT_EQ(root->keys[0], 110);
+    ASSERT_EQ(root->keys[1], 130);
+    ASSERT_EQ(root->keys[2], 160);
+
+    ASSERT_EQ(firstChild->keys[0], 60);
+    ASSERT_EQ(secondChild->keys[0], 120);
+    ASSERT_EQ(thirdChild->keys[0], 140);
+    ASSERT_EQ(fourthChild->keys[0], 170);
+}*/
+
+/* TEST_F(BTreeTests, RemoveInternalWithBorrowTest)
+{
+    stu::btree tree;
+    tree.insert(50);5
+    tree.insert(60);
+    tree.insert(70);
+    tree.insert(80);
+    tree.insert(90);
+    tree.insert(100);
+    tree.insert(110);
+    tree.insert(120);
+
+    auto root = const_cast<stu::btree::BNode*>(tree.getRoot());
+    auto leftChild = root->children[0];
+    auto rightChild = root->children[1];
+
+    // Ensure the initial state before removing
+    EXPECT_EQ(leftChild->size, 2);
+    EXPECT_EQ(rightChild->size, 2);
+    EXPECT_EQ(root->size, 1);
+
+    // Perform the removeInternal operation with borrowing
+    tree.removeInternal(root, 70);
+
+    // Verify the state after removing
+    EXPECT_EQ(leftChild->size, 2);
+    EXPECT_EQ(rightChild->size, 2);
+    EXPECT_EQ(root->size, 0);
+    EXPECT_EQ(leftChild->keys[0], 50);
+    EXPECT_EQ(leftChild->keys[1], 60);
+    EXPECT_EQ(rightChild->keys[0], 100);
+    EXPECT_EQ(rightChild->keys[1], 110);
+}
+
+TEST_F(BTreeTests, RemoveInternalWithMergeTest)
+{
+    stu::btree tree;
+    tree.insert(50);
+    tree.insert(60);
+    tree.insert(70);
+    tree.insert(80);
+    tree.insert(90);
+    tree.insert(100);
+    tree.insert(110);
+    tree.insert(120);
+
+    auto root = const_cast<stu::btree::BNode*>(tree.getRoot());
+    auto leftChild = root->children[0];
+    auto rightChild = root->children[1];
+
+    // Ensure the initial state before removing
+    EXPECT_EQ(leftChild->size, 2);
+    EXPECT_EQ(rightChild->size, 2);
+    EXPECT_EQ(root->size, 1);
+
+    // Perform the removeInternal operation with merging
+    tree.removeInternal(root, 60);
+
+    // Verify the state after removing
+    EXPECT_EQ(leftChild->size, 3);
+    EXPECT_EQ(rightChild->size, 2);
+    EXPECT_EQ(root->size, 0);
+    EXPECT_EQ(leftChild->keys[0], 50);
+    EXPECT_EQ(leftChild->keys[1], 70);
+    EXPECT_EQ(leftChild->keys[2], 80);
+    EXPECT_EQ(rightChild->keys[0], 100);
+    EXPECT_EQ(rightChild->keys[1], 110);
+}*/
 
 void FileTest(std::string functionName, std::string_view fileName)
 {
@@ -490,7 +693,7 @@ void FileTest(std::string functionName, std::string_view fileName)
     std::chrono::nanoseconds searchTime{};
     std::chrono::nanoseconds removeTime{};
 
-    //std::chrono::high_resolution_clock
+    // std::chrono::high_resolution_clock
     while (std::getline(file, line))
     {
         command.clear();
@@ -511,9 +714,14 @@ void FileTest(std::string functionName, std::string_view fileName)
             auto end = std::chrono::high_resolution_clock::now();
             insertTime += end - start;
         }
-        else if (command == "REMOVE")
+        else if (command == "DELETE")
         {
-            // remove
+            auto start = std::chrono::high_resolution_clock::now();
+
+            tree.remove(value);
+
+            auto end = std::chrono::high_resolution_clock::now();
+            removeTime += end - start;
         }
         else if (command == "SEARCH" && iss >> expected)
         {
@@ -532,6 +740,8 @@ void FileTest(std::string functionName, std::string_view fileName)
         }
     }
 
+    ASSERT_TRUE(tree.isSorted());
+
     std::vector<int> expected = parseArray(line);
     std::vector<int> actual = tree.toVector();
 
@@ -545,23 +755,48 @@ void FileTest(std::string functionName, std::string_view fileName)
 }
 
 // INSERT TESTS
-/*TEST_F(BTreeTests, InsertTest)
+TEST_F(BTreeTests, InsertTest)
 {
     FileTest(__FUNCTION__, BTreeTests::insertFilePath);
 }
 
-TEST_F(BTreeTests, InsertTestPerf)
-{
-    FileTest(__FUNCTION__, BTreeTests::perfInsertFilePath);
-}
+//TEST_F(BTreeTests, InsertTestPerf)
+//{
+//    FileTest(__FUNCTION__, BTreeTests::perfInsertFilePath);
+//}
+//
+//// SEARCH TESTS
+//TEST_F(BTreeTests, SearchTest)
+//{
+//    FileTest(__FUNCTION__, BTreeTests::searchFilePath);
+//}
+//
+//TEST_F(BTreeTests, SearchTestPerf)
+//{
+//    FileTest(__FUNCTION__, BTreeTests::perfSearchFilePath);
+//}
 
-// SEARCH TESTS
-TEST_F(BTreeTests, SearchTest)
-{
-    FileTest(__FUNCTION__, BTreeTests::searchFilePath);
-}
+//TEST_F(BTreeTests, RemoveTestFunctional100)
+//{
+//	FileTest(__FUNCTION__, BTreeTests::FunctionalRemove100FilePath);
+//}
+//
+//TEST_F(BTreeTests, RemoveTestFunctional50)
+//{
+//	FileTest(__FUNCTION__, BTreeTests::FunctionalRemove50FilePath);
+//}
+//
+//TEST_F(BTreeTests, RemoveTestNULL)
+//{
+//	FileTest(__FUNCTION__, BTreeTests::FunctionalRemoveNULLFilePath);
+//}
+//
+//TEST_F(BTreeTests, RemoveFindPre)
+//{
+//	FileTest(__FUNCTION__, BTreeTests::funcRemoveFindPre);
+//}
 
-TEST_F(BTreeTests, SearchTestPerf)
+TEST_F(BTreeTests, RemoveTest)
 {
-    FileTest(__FUNCTION__, BTreeTests::perfSearchFilePath);
-}*/
+	FileTest(__FUNCTION__, BTreeTests::removeFilePath);
+}

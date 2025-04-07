@@ -35,7 +35,7 @@ namespace stu
 			std::array<value_type, max_node_size + 1> keys_{};
 			size_t size{};
 			BNode* parent{};
-			std::array<BNode*, max_node_size + 2> children_{};
+			std::array<BNode*, max_children_size + 1> children_{};
 			size_t childrenSize{};
 
 			value_type& keys(size_t index)
@@ -955,6 +955,9 @@ namespace stu
 				printBTree(node->children(i), depth + 1);
 			}
 		}
+
+
+
 
 		private:
 			BNode* root{};

@@ -197,23 +197,23 @@ TEST_F(BTreeTests, CheckFiles)
 
 std::vector<int> parseArray(std::string& line, int reserve = 1000)
 {
-    std::vector<int> numbers;
-    numbers.reserve(reserve);
+	std::vector<int> numbers;
+	numbers.reserve(reserve);
 
-    std::istringstream ss(line);
+	std::istringstream ss(line);
 
-    char ch;
-    int num;
+	char ch;
+	int num;
 
-    ss >> ch;
+	ss >> ch;
 
-    while (ss >> num)
-    {
-        numbers.push_back(num);
-        ss >> ch;
-    }
+	while (ss >> num)
+	{
+		numbers.push_back(num);
+		ss >> ch;
+	}
 
-    return numbers;
+	return numbers;
 }
 
 TEST_F(BTreeTests, getChildrenTest)
@@ -751,7 +751,6 @@ void FileTest(std::string functionName, std::string_view fileName)
     std::cout << "\n";
 
     EXPECT_EQ(expected, actual);
-    // You can add assertions here to verify the state of the tree after insertion
 }
 
 // INSERT TESTS

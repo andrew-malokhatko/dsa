@@ -23,14 +23,6 @@ target_link_libraries(StuTests PRIVATE stu gtest gtest_main)
 # Add test
 add_test(NAME StuTests COMMAND StuTests)
 
-#add_custom_target(
-#	TARGET StuTests ALL
-#	POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_directory
-#    ${CMAKE_CURRENT_SOURCE_DIR}/resources  # Source directory
-#    ${CMAKE_CURRENT_BINARY_DIR}/resources  # Destination directory
-#)
-
 # Copy resources folder to build directory
 add_custom_target(CopyResources ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -38,4 +30,20 @@ add_custom_target(CopyResources ALL
     ${CMAKE_CURRENT_BINARY_DIR}/resources  # Destination directory
 )
 
+# Copy baty files for testing folder to build directory
+add_custom_target(CopyGenerators ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/generator  # Source directory
+    ${CMAKE_CURRENT_BINARY_DIR}/generator  # Destination directory
+)
+
+# Copy baty files for testing folder to build directory
+add_custom_target(CopyBatFiles ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testers     # Source directory
+    ${CMAKE_CURRENT_BINARY_DIR}             # Destination directory
+)
+
 add_dependencies(StuTests CopyResources)
+add_dependencies(StuTests CopyGenerators)
+add_dependencies(StuTests CopyBatFiles)

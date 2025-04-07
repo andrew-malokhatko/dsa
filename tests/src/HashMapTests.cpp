@@ -14,6 +14,24 @@ protected:
 	static constexpr std::string_view FunctionalInsertFile{"resources/dictInsertTest.txt"};
 	static constexpr std::string_view dictSearchTestFile{"resources/dictSearchTest.txt"};
 	static constexpr std::string_view dictRemoveTestFile{"resources/dictRemoveTest.txt"};
+
+	// Performance tests Insert
+	static constexpr std::string_view perf1{"resources/dictperf/dictInsert1kTest.txt"};
+	static constexpr std::string_view perf10{"resources/dictperf/dictInsert10kTest.txt"};
+	static constexpr std::string_view perf100{"resources/dictperf/dictInsert10kTest.txt"};
+	static constexpr std::string_view perf1m{"resources/dictperf/dictInsert1milTest.txt"};
+
+	// Performance tests Search
+	static constexpr std::string_view perf1s{"resources/dictperf/dictSearch1kTest.txt"};
+	static constexpr std::string_view perf10s{"resources/dictperf/dictSearch10kTest.txt"};
+	static constexpr std::string_view perf100s{"resources/dictperf/dictSearch100kTest.txt"};
+	static constexpr std::string_view perf1ms{"resources/dictperf/dictSearch1milTest.txt"};
+
+	// Performance tests Delete
+	static constexpr std::string_view perf1d{"resources/dictperf/dictDelete1kTest.txt"};
+	static constexpr std::string_view perf10d{"resources/dictperf/dictDelete10kTest.txt"};
+	static constexpr std::string_view perf100d{"resources/dictperf/dictDelete100kTest.txt"};
+	static constexpr std::string_view perf1md{"resources/dictperf/dictDelete1milTest.txt"};
 };
 
 TEST_F(HashMapTests, DefaultConstructor)
@@ -21,8 +39,6 @@ TEST_F(HashMapTests, DefaultConstructor)
 	stu::hashmap map = stu::hashmap(1000);
 
 	std::cout << "\n\n\n" << "Welcome to hashMap test!!! \n\n\n";
-	/* EXPECT_EQ(tree.size(), 0);
-	EXPECT_TRUE(tree.empty());*/
 }
 
 /*TEST_F(HashMapTests, mainHashFunctionCollisions)
@@ -198,7 +214,7 @@ void MapFileTest(std::string functionName, std::string_view fileName)
 
 	ASSERT_TRUE(file.is_open());
 
-	stu::hashmap map = stu::hashmap();
+	stu::hashmap map;
 	std::string line;
 	std::string command;
 	int count = 0;
@@ -273,12 +289,28 @@ TEST_F(HashMapTests, InsertFileTest)
 	MapFileTest(__FUNCTION__, HashMapTests::FunctionalInsertFile);
 }
 
-TEST_F(HashMapTests, SearchFileTestAfterInsert)
-{
-	MapFileTest(__FUNCTION__, HashMapTests::dictSearchTestFile);
-}
-
 TEST_F(HashMapTests, RemoveTest)
 {
 	MapFileTest(__FUNCTION__, HashMapTests::dictRemoveTestFile);
 }
+
+ TEST_F(HashMapTests, RunPerformanceTest)
+{
+     // insert tests
+	MapFileTest("1k insert", HashMapTests::perf1);
+	MapFileTest("10k insert", HashMapTests::perf10);
+	MapFileTest("100k insert", HashMapTests::perf100);
+	MapFileTest("1m insert", HashMapTests::perf1m);
+
+     // search tests
+	MapFileTest("1k search", HashMapTests::perf1s);
+	MapFileTest("10k search", HashMapTests::perf10s);
+	MapFileTest("100k search", HashMapTests::perf100s);
+	MapFileTest("1m search", HashMapTests::perf1ms);
+
+     // delete tests
+	MapFileTest("1k delete", HashMapTests::perf1d);
+	MapFileTest("10k delete", HashMapTests::perf10d);
+	MapFileTest("100k delete", HashMapTests::perf100d);
+	MapFileTest("1m delete", HashMapTests::perf1md);
+ }

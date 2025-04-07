@@ -15,6 +15,24 @@ class BTreeTests : public ContainerTests
 	static constexpr std::string_view FunctionalRemove50FilePath{"resources/funcRemoveTest50.txt"};
 	static constexpr std::string_view FunctionalRemoveNULLFilePath{"resources/funcRemoveTestNULL.txt"};
 	static constexpr std::string_view funcRemoveFindPre{"resources/funcRemoveFindPre.txt"};
+
+    // Performance tests Insert
+	static constexpr std::string_view perf1{"resources/treeperf/treeInsert1kTest.txt"};
+	static constexpr std::string_view perf10{"resources/treeperf/treeInsert10kTest.txt"};
+	static constexpr std::string_view perf100{"resources/treeperf/treeInsert10kTest.txt"};
+	static constexpr std::string_view perf1m{"resources/treeperf/treeInsert1milTest.txt"};
+
+    // Performance tests Search
+	static constexpr std::string_view perf1s{"resources/treeperf/treeSearch1kTest.txt"};
+	static constexpr std::string_view perf10s{"resources/treeperf/treeSearch10kTest.txt"};
+	static constexpr std::string_view perf100s{"resources/treeperf/treeSearch100kTest.txt"};
+	static constexpr std::string_view perf1ms{"resources/treeperf/treeSearch1milTest.txt"};
+
+    // Performance tests Delete
+	static constexpr std::string_view perf1d{"resources/treeperf/treeDelete1kTest.txt"};
+	static constexpr std::string_view perf10d{"resources/treeperf/treeDelete10kTest.txt"};
+	static constexpr std::string_view perf100d{"resources/treeperf/treeDelete100kTest.txt"};
+	static constexpr std::string_view perf1md{"resources/treeperf/treeDelete1milTest.txt"};
 };
 
 TEST_F(BTreeTests, DefaultConstructor)
@@ -679,6 +697,13 @@ TEST_F(BTreeTests, RemoveInternalWithMergeTest)
 
 void FileTest(std::string functionName, std::string_view fileName)
 {
+    //using clock = std::chrono::high_resolution_clock;
+    //using milliseconds = std::chrono::milliseconds;
+
+	//const milliseconds sampleTime = std::chrono::milliseconds(50);
+
+    //milliseconds lastSampleTime = std::chrono::duration_cast<milliseconds>(clock::now().time_since_epoch());
+    
     std::cout << "\n" << functionName << "\n";
 
     std::ifstream file(fileName.data());
@@ -754,11 +779,11 @@ void FileTest(std::string functionName, std::string_view fileName)
 }
 
 // INSERT TESTS
-TEST_F(BTreeTests, InsertTest)
-{
-    FileTest(__FUNCTION__, BTreeTests::insertFilePath);
-}
-
+//TEST_F(BTreeTests, InsertTest)
+//{
+//    FileTest(__FUNCTION__, BTreeTests::insertFilePath);
+//}
+//
 //TEST_F(BTreeTests, InsertTestPerf)
 //{
 //    FileTest(__FUNCTION__, BTreeTests::perfInsertFilePath);
@@ -793,9 +818,30 @@ TEST_F(BTreeTests, InsertTest)
 //TEST_F(BTreeTests, RemoveFindPre)
 //{
 //	FileTest(__FUNCTION__, BTreeTests::funcRemoveFindPre);
+////}
+//
+//TEST_F(BTreeTests, RemoveTest)
+//{
+//	FileTest(__FUNCTION__, BTreeTests::removeFilePath);
 //}
-
-TEST_F(BTreeTests, RemoveTest)
-{
-	FileTest(__FUNCTION__, BTreeTests::removeFilePath);
-}
+//
+//TEST_F(BTreeTests, RunPerformanceTest)
+//{
+//    // insert tests
+//	FileTest("1k insert", BTreeTests::perf1);
+//	FileTest("10k insert", BTreeTests::perf10);
+//	FileTest("100k insert", BTreeTests::perf100);
+//	FileTest("1m insert", BTreeTests::perf1m);
+//
+//    // search tests
+//	FileTest("1k search", BTreeTests::perf1s);
+//	FileTest("10k search", BTreeTests::perf10s);
+//	FileTest("100k search", BTreeTests::perf100s);
+//	FileTest("1m search", BTreeTests::perf1ms);
+//
+//    // delete tests
+//	FileTest("1k delete", BTreeTests::perf1d);
+//	FileTest("10k delete", BTreeTests::perf10d);
+//	FileTest("100k delete", BTreeTests::perf100d);
+//	FileTest("1m delete", BTreeTests::perf1md);
+//}

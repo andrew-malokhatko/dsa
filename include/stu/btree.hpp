@@ -595,11 +595,11 @@ namespace stu
 		{
 			node->removeKey(key);
 			balanceRemove(node);
-			
-			if (!isSorted())
-			{
-				assert(isSorted());
-			}
+			//
+			//if (!isSorted())
+			//{
+			//	assert(isSorted());
+			//}
 		}
 
 		void removeInternal(BNode* node, value_type key)
@@ -660,6 +660,7 @@ namespace stu
 				node->removeKey(key);
 				balanceRemove(node);
 
+				assert(isSorted());
 				/*if (!isSorted())
 				{
 					print(__LINE__);
@@ -857,11 +858,6 @@ namespace stu
 				return;
 			}
 
-			if (key == 1700)
-			{
-				//print(__LINE__);
-			}
-
 			BNode* current = findNode(key);
 			int index = current->findIndex(key);
 
@@ -891,11 +887,11 @@ namespace stu
 				}
 			}
 			
-			if (!isSorted())
+			/*if (!isSorted())
 			{
 				print(__LINE__);
 				assert(isSorted());
-			}
+			}*/
 
 			m_size--;
 		}
@@ -955,9 +951,6 @@ namespace stu
 				printBTree(node->children(i), depth + 1);
 			}
 		}
-
-
-
 
 		private:
 			BNode* root{};

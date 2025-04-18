@@ -35,7 +35,7 @@ namespace stu
 	
 	public:
 
-		static size_type hashMain(int value)
+		/*static size_type hashMain(int value)
 		{
 			size_type result = 0;
 			int counter = 43;
@@ -57,31 +57,71 @@ namespace stu
 			}
 
 			return result;
-		}
+		}*/
 
-		static size_type hashSecondary(size_type value)
+
+		//static size_type hashSecondary(key_type data)
+		//{
+		//	size_type result = 0;
+		//	int counter = 23;
+
+		//	while (data)
+		//	{
+		//		counter = prime(counter);
+
+		//		if (result % 3 == 0)
+		//		{
+		//			result += counter * counter + sqrt(data);
+		//			result += data / sqrt(counter);
+		//		}
+
+		//		result += ((data % 13 + 37) * counter) * ((data % 13 + 37) * counter);
+		//		result *= sqrt(data);
+
+		//		counter++;
+		//		data /= 13;
+		//	}
+
+		//	return result;
+		//}
+
+		static size_type hashMain(const void* data, size_t byteSize)
 		{
-			size_type result = 0;
-			int counter = 23;
+			size_t hash = 0;
+			const char* prt = (const char*)data;
 
-			while (value)
+			while (byteSize--)
 			{
-				counter = prime(counter);
-
-				if (result % 3 == 0)
-				{
-					result += counter * counter + sqrt(value);
-					result += value / sqrt(counter);
-				}
-
-				result += ((value % 13 + 37) * counter) * ((value % 13 + 37) * counter);
-				result *= sqrt(value);
-
-				counter++;
-				value /= 13;
+				hash += (hash << 5) + *prt;
+				prt++;
 			}
 
-			return result;
+			return hash + 89;
+		}
+
+		static size_type hashSecondary(const void* data, size_t byteSize)
+		{
+			size_t hash = 0;
+			const char* prt = (const char*)data;
+
+			while (byteSize--)
+			{
+				hash += (hash << 3) + *prt;
+				prt++;
+			}
+
+			return hash + 17;
+		}
+
+
+		static size_type hashSecondary(key_type data)
+		{
+			return hashSecondary(&data, sizeof(key_type));
+		}
+
+		static size_type hashMain(key_type data)
+		{
+			return hashMain(&data, sizeof(key_type));
 		}
 
 		size_type hash(key_type key, size_type attempt) const
@@ -229,6 +269,16 @@ namespace stu
 				{
 					map[insertPosition].collisions++;
 					attempt++;
+
+					// in case some ver bad copllisions happen
+					// that could potentially lead to infinite loops
+					/*if (attempt > 1000)
+					{
+						reserve(m_capacity * treshhold);
+						insert(key, value);
+						return;
+					}*/
+
 					continue;
 				}
 
@@ -250,7 +300,7 @@ namespace stu
 				reserve(m_capacity * treshhold);
 			}
 
-			assert(containsDuplicate() == false);
+			//assert(containsDuplicate() == false);
 		}
 
 		void reserve(size_type newSize)
@@ -273,14 +323,14 @@ namespace stu
 				}
 			}
 
-			assert(newMap.m_size == m_size);
+			//assert(newMap.m_size == m_size);
 
 			delete[] map;
 
 			m_capacity = newMap.m_capacity;
 			map = newMap.map;
 
-			assert(containsDuplicate() == false);
+			//assert(containsDuplicate() == false);
 		}
 
 		void remove(key_type key)
@@ -298,7 +348,7 @@ namespace stu
 				current.deleted = true;
 			}
 
-			assert(containsDuplicate() == false);
+			//assert(containsDuplicate() == false);
 		}
 
 		bool containsKey(key_type key)

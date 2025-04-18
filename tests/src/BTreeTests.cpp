@@ -33,6 +33,11 @@ class BTreeTests : public ContainerTests
 	static constexpr std::string_view perf10d{"resources/treeperf/treeDelete10kTest.txt"};
 	static constexpr std::string_view perf100d{"resources/treeperf/treeDelete100kTest.txt"};
 	static constexpr std::string_view perf1md{"resources/treeperf/treeDelete1milTest.txt"};
+
+    // Performance all
+	static constexpr std::string_view perfAll1{"resources/treeperf/treeAll1milTest.txt"};
+	static constexpr std::string_view perfAll10{"resources/treeperf/treeAll10milTest.txt"};
+
 };
 
 TEST_F(BTreeTests, DefaultConstructor)
@@ -844,4 +849,10 @@ void FileTest(std::string functionName, std::string_view fileName)
 //	FileTest("10k delete", BTreeTests::perf10d);
 //	FileTest("100k delete", BTreeTests::perf100d);
 //	FileTest("1m delete", BTreeTests::perf1md);
+//}
+//
+//TEST_F(BTreeTests, AllTestsBtree)
+//{
+//	FileTest("1mil all", BTreeTests::perfAll1);
+//	FileTest("10mil all", BTreeTests::perfAll10);
 //}

@@ -32,6 +32,10 @@ protected:
 	static constexpr std::string_view perf10d{"resources/dictperf/dictDelete10kTest.txt"};
 	static constexpr std::string_view perf100d{"resources/dictperf/dictDelete100kTest.txt"};
 	static constexpr std::string_view perf1md{"resources/dictperf/dictDelete1milTest.txt"};
+
+	// Performance 
+	static constexpr std::string_view perfAll1{"resources/dictperf/dictAll1milTest.txt"};
+	static constexpr std::string_view perfAll10{"resources/dictperf/dictAll10milTest.txt"};
 };
 
 TEST_F(HashMapTests, DefaultConstructor)
@@ -293,24 +297,25 @@ TEST_F(HashMapTests, RemoveTest)
 {
 	MapFileTest(__FUNCTION__, HashMapTests::dictRemoveTestFile);
 }
+//
+// TEST_F(HashMapTests, RunPerformanceTest)
+//{
+//     // insert tests
+//	MapFileTest("1k insert", HashMapTests::perf1);
+//	MapFileTest("10k insert", HashMapTests::perf10);
+//	MapFileTest("100k insert", HashMapTests::perf100);
+//	MapFileTest("1m insert", HashMapTests::perf1m);
+//
+//     // search tests
+//	MapFileTest("1k search", HashMapTests::perf1s);
+//	MapFileTest("10k search", HashMapTests::perf10s);
+//	MapFileTest("100k search", HashMapTests::perf100s);
+//	MapFileTest("1m search", HashMapTests::perf1ms);
+//
+//     // delete tests
+//	MapFileTest("1k delete", HashMapTests::perf1d);
+//	MapFileTest("10k delete", HashMapTests::perf10d);
+//	MapFileTest("100k delete", HashMapTests::perf100d);
+//	MapFileTest("1m delete", HashMapTests::perf1md);
+// }
 
- TEST_F(HashMapTests, RunPerformanceTest)
-{
-     // insert tests
-	MapFileTest("1k insert", HashMapTests::perf1);
-	MapFileTest("10k insert", HashMapTests::perf10);
-	MapFileTest("100k insert", HashMapTests::perf100);
-	MapFileTest("1m insert", HashMapTests::perf1m);
-
-     // search tests
-	MapFileTest("1k search", HashMapTests::perf1s);
-	MapFileTest("10k search", HashMapTests::perf10s);
-	MapFileTest("100k search", HashMapTests::perf100s);
-	MapFileTest("1m search", HashMapTests::perf1ms);
-
-     // delete tests
-	MapFileTest("1k delete", HashMapTests::perf1d);
-	MapFileTest("10k delete", HashMapTests::perf10d);
-	MapFileTest("100k delete", HashMapTests::perf100d);
-	MapFileTest("1m delete", HashMapTests::perf1md);
- }

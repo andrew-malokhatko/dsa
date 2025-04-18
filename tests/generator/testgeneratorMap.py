@@ -1,7 +1,7 @@
 import random
 
-RANGE = 200
-TEST_COUNT = 1000
+RANGE = 10_000_000
+TEST_COUNT = 10_000_000
 
 # operaton list: "INSERT", "DELETE", "SEARCH"
 def generate_test_case(n_ops, operation_list, test_dict: dict):
@@ -31,16 +31,12 @@ def generate_test_case(n_ops, operation_list, test_dict: dict):
 
 
 test_dict = dict()  # Tracks keys currently in the data structure
-testInsert = generate_test_case(100, ["INSERT"], test_dict)
-print(len(test_dict))
-#testSearch = generate_test_case(100, ["DELETE"], test_dict)
-#print(len(test_dict))
-testSearch = generate_test_case(100, ["SEARCH"], test_dict)
+testInsert = generate_test_case(TEST_COUNT, ["INSERT", "SEARCH", "DELETE"], test_dict)
 print(len(test_dict))
 
-test = testInsert + testSearch
+test = testInsert
 
-with open("../resources/dictSearchTest.txt", "w") as f:
+with open("../resources/dictAll10milTest.txt", "w") as f:
     for op in test:
         f.write(op + "\n")
 

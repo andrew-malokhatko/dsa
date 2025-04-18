@@ -11,11 +11,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-add_executable(StuTests 
+add_executable( StuTests 
 	./src/BTreeTests.cpp
     ./src/ContainerTests.hpp
     ./src/HashMapTests.cpp
 	./src/main.cpp
+    ./src/BDDTests.cpp
 )
 
 target_link_libraries(StuTests PRIVATE stu gtest gtest_main)

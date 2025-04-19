@@ -3,9 +3,10 @@
 #include <vector>
 #include <queue>
 #include <unordered_map>
-#include <unordered_set>
+#include <set>
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
 
 namespace stu
@@ -13,18 +14,27 @@ namespace stu
 	class bdd
 	{
 	public:
+		class Node;
+		using NodePtr = std::shared_ptr<Node>;
+		using NodeWeakPtr = std::weak_ptr<Node>;
 
-		struct Node
+		struct Node : std::enable_shared_from_this<Node>
 		{
 			std::string formula{};
 			char var{};
 
+			struct WeakPtrLess {
+				bool operator()(const NodeWeakPtr& lhs, const NodeWeakPtr& rhs) const {
+					return lhs.lock().get() < rhs.lock().get();
+				}
+			};
+
 			// After Reduction Type I node
 			// can have multiple parents
-			std::unordered_set<Node*> parents{};
+			std::set<NodeWeakPtr, WeakPtrLess> parents{};
 
-			Node* low{};
-			Node* high{};
+			NodePtr low{};
+			NodePtr high{};
 
 			Node() = default;
 
@@ -32,17 +42,6 @@ namespace stu
 				formula(f),
 				var(v)
 			{
-			}
-
-			//bool operator ==(const Node& other)
-			//{
-			//	return formula == other.formula;
-			//}
-
-			bool isLeaf() const
-			{
-				assert((low == nullptr && high == nullptr) || (low != nullptr && high != nullptr));
-				return low == nullptr || high == nullptr;
 			}
 
 			bool isTerminal() const
@@ -86,29 +85,27 @@ namespace stu
 				formula += part;
 			}
 
-			void addParent(Node* node)
+			void addParent(NodePtr node)
 			{
 				parents.insert(node);
 			}
 
-			void replaceChild(Node* old, Node* newChild)
+			void replaceChild(NodePtr old, NodePtr newChild)
 			{
+				assert(old == low || old == high);
+
 				if (old == low)
 				{
 					low = newChild;
 				}
-				else if (old == high)
+				else
 				{
 					high = newChild;
 				}
-				else
-				{
-					assert(false);
-				}
 
-				if (!newChild->isTerminal())
+				if (newChild->isTerminal() == false)
 				{
-					newChild->addParent(this);
+					newChild->addParent(this->shared_from_this());
 				}
 			}
 		};
@@ -269,11 +266,10 @@ namespace stu
 		}
 
 	private:
-
-		Node* evaluate(const std::string& formula, char currentVar, bool value)
+		NodePtr evaluate(const std::string& formula, char currentVar, bool value)
 		{
 			std::vector<std::string> parts = split(formula, '+');
-			Node* result = new Node();
+			auto result = std::make_shared<Node>();
 
 			// handle AND
 			// here formula is the part and looks like A!BC
@@ -300,16 +296,14 @@ namespace stu
 
 					if (part.size() == 0)
 					{
-						delete result;
-						return &terminalTrue;
+						return m_terminalTrue;
 					}
 
 					result->add(part);
 				}
 				else
 				{
-					delete result;
-					return &terminalFalse;
+					return m_terminalFalse;
 				}
 
 				result->formula = sortDnf(result->formula);
@@ -330,11 +324,10 @@ namespace stu
 				else if (hasVar)
 				{
 					// try to evaluate the expression to true
-					// evaluation to fasle will be handled later in AND
+					// evaluation to false will be handled later in AND
 					if (hasOnly(part, currentVar) && ((value && !isNeg) || (!value && isNeg)))
 					{
-						delete result;
-						return &terminalTrue;
+						return m_terminalTrue;
 					}
 
 					if (value != isNeg)
@@ -351,53 +344,18 @@ namespace stu
 				return result;
 			}
 
-			return &terminalFalse;
-		}
-
-		void clear(Node* node)
-		{
-			if (!node)
-			{
-				return;
-			}
-
-			clear(node->low);
-			clear(node->high);
-
-			if (!node->isTerminal())
-			{
-				// if node has 2 or more parents, set other parents pointers
-				// to nullptr to avoid double deletion
-				for (Node* parent : node->parents)
-				{
-					if (node == parent->low)
-					{
-						parent->low = nullptr;
-					}
-					if (node == parent->high)
-					{
-						parent->high = nullptr;
-					}
-				}
-
-				delete node;
-			}
+			return m_terminalFalse;
 		}
 
 	public:
 
 		bdd(const std::string& formula, const std::string& inputOrder)
 		{
-			order.reserve(100);
+			m_order.reserve(100);
 			create(formula, inputOrder);
 		}
 
-		~bdd()
-		{
-			clear(root);
-		}
-
-		void traverse(Node* node, int depth = 0)
+		static void traverse(const NodePtr& node, int depth = 0)
 		{
 			std::cout << "Node formula: " << node->formula << " depth: " << depth << "\n";
 			if (node->low)
@@ -414,98 +372,92 @@ namespace stu
 		}
 
 		// queue is nodes that require further calculations
-		bool reduceTypeI(Node* node)
+		bool reduceTypeI(NodePtr node)
 		{
 			bool reduced = false;
 
 			// make function suitable for both low and high nodes
-			if (!node->isTerminal() && allNodes.contains(node->formula))
+			if (!node->isTerminal() && m_allNodes.contains(node->formula))
 			{
-				// delete old node, and substitute it with exitsing node from allNodes
-				Node* oldNode = node;
-				node = allNodes[node->formula];
+				// delete old node, and substitute it with existing node from allNodes
+				auto oldNode = node;
+				node = m_allNodes[node->formula];
 
 				// move all parents of oldNode to existing node
-				for (Node* parent : oldNode->parents)
+				for (auto parent : oldNode->parents)
 				{
-					assert(oldNode == parent->low || oldNode == parent->high);
+					NodePtr parentPtr = parent.lock();
+					assert(parentPtr);
 
-					Node** insertPos = (oldNode == parent->low) ? &parent->low : &parent->high;
+					assert(oldNode == parentPtr->low || oldNode == parentPtr->high);
 
-					node->addParent(parent);
-					*insertPos = node;
+					if (oldNode == parentPtr->low)
+					{
+						parentPtr->low = node;
+					}
+					else
+					{
+						parentPtr->high = node;
+					}
+
+					node->addParent(parentPtr);
 
 					reduced = true;
 				}
-
-				delete oldNode;
 			}
 
 			return reduced;
 		}
 
 		// in case that low and high are the same
-		// current node appears uselless, delete it
+		// current node appears useless, delete it
 		// and place low or high on it's place 
 		// return value signals success of the reduction
-		bool reduceTypeS(Node* parent)
+		bool reduceTypeS(NodePtr parent)
 		{
 			if (!parent || parent->isTerminal())
 			{
 				return false;
 			}
 
-			Node* low = parent->low;
-			Node* high = parent->high;
+			NodePtr low = parent->low;
+			NodePtr high = parent->high;
 
 			if (low->formula == high->formula)
 			{
 				// sort the parents from longest to shortest to prevent
 				// iteration on the deleted nodes
-				std::vector<Node*> parents(parent->parents.begin(), parent->parents.end());
+				std::vector<NodeWeakPtr> parents(parent->parents.begin(), parent->parents.end());
 				std::sort(parents.begin(), parents.end(),
-					[](const Node* a, const Node* b)
+					[](const NodeWeakPtr& a, const NodeWeakPtr& b)
 					{
-						return a->formula.size() > b->formula.size();
+						return a.lock()->formula.size() > b.lock()->formula.size();
 					});
 
-				auto it = std::find(low->parents.begin(), low->parents.end(), parent);
-				if (it != low->parents.end())
-				{
-					low->parents.erase(it);
-				}
+				NodeWeakPtr weakParent{ parent };
+				low->parents.erase(weakParent);
 
 				if (parent->isRoot())
 				{
-					root = low;
+					m_root = low;
 				}
 				else
 				{
 					// replace parent with low in parents parent
-					for (Node* pParent : parent->parents)
+					for (NodeWeakPtr pParent : parent->parents)
 					{
-						pParent->replaceChild(parent, low);
+						pParent.lock()->replaceChild(parent, low);
 					}
-				}
-
-				// low may be a pointer to high
-				// so if it is, it cant be deleted
-				if (!high->isTerminal() && high != low)
-				{
-					// only delete high when it's not terminal !!!
-					// otherwise member terminal node is deleted
-					delete high;
 				}
 
 				if (parent->formula != low->formula)
 				{
-					allNodes.erase(parent->formula);
+					m_allNodes.erase(parent->formula);
 				}
-				delete parent;
 
-				for (Node* oldParent : parents)
+				for (auto oldParent : parents)
 				{
-					reduceTypeS(oldParent);
+					reduceTypeS(oldParent.lock());
 				}
 
 				return true;
@@ -516,19 +468,19 @@ namespace stu
 
 		// returns true, if further reduction is needed
 		// also fills the array of nodes that require evaluation
-		void reduce(Node* node, std::queue<Node*>& nodes)
+		void reduce(NodePtr node, std::queue<NodePtr>& nodes)
 		{
-			Node* low = node->low;
-			Node* high = node->high;
+			auto low = node->low;
+			auto high = node->high;
 
 
 			// store copy of parents in case reduceTypeS
-			// fires and dletes the node
+			// fires and deletes the node
 			//std::vector<Node*> parents = node->parents;
 			if (low && !low->isTerminal() && !reduceTypeI(low))
 			{
 				nodes.push(low);
-				allNodes[low->formula] = low;
+				m_allNodes[low->formula] = low;
 			}
 
 			bool reducedS = reduceTypeS(node);
@@ -539,18 +491,9 @@ namespace stu
 				if (high && !high->isTerminal() && !reduceTypeI(high))
 				{
 					nodes.push(high);
-					allNodes[high->formula] = high;
+					m_allNodes[high->formula] = high;
 				}
 			}
-
-			// try to reduce parents
-			//if (reducedS)
-			//{
-			//	for (Node* parent : parents)
-			//	{
-			//		reduceTypeS(parent);
-			//	}
-			//}
 		}
 
 
@@ -561,24 +504,20 @@ namespace stu
 				return;
 			}
 
-			allNodes.clear();
+			m_allNodes.clear();
 
-			formula = inputFormula;
-			order = inputOrder;
+			m_formula = inputFormula;
+			m_order = inputOrder;
 
 			// Remove spaces
-			removeChars(order, ' ');
-			removeChars(formula, ' ');
+			removeChars(m_order, ' ');
+			removeChars(m_formula, ' ');
 
-			delete root;
-			root = new Node(formula, 0);
-			allNodes[root->formula] = root;
+			m_root = std::make_shared<Node>(m_formula, 0);
+			m_allNodes[m_root->formula] = m_root;
 
-			std::queue<Node*> nodes;
-			nodes.push(root);
-
-			//allNodes[terminalFalse.formula] = &terminalFalse;
-			//allNodes[terminalTrue.formula] = &terminalTrue;
+			std::queue<NodePtr> nodes;
+			nodes.push(m_root);
 
 			for (int i = 0; i < inputOrder.size(); i++)
 			{
@@ -586,11 +525,11 @@ namespace stu
 
 				for (int k = 0, layerSize = nodes.size(); k < layerSize; k++)
 				{
-					Node* node = nodes.front();
+					auto node = nodes.front();
 					node->var = currentVar;
 					nodes.pop();
 
-					// skip the node on this iterationm, if it's not influenced
+					// skip the node on this iteration, if it's not influenced
 					// by current variable
 					if (!node->containsVar(currentVar))
 					{
@@ -598,8 +537,8 @@ namespace stu
 						continue;
 					}
 
-					Node* low = evaluate(node->formula, currentVar, false);
-					Node* high = evaluate(node->formula, currentVar, true);
+					auto low = evaluate(node->formula, currentVar, false);
+					auto high = evaluate(node->formula, currentVar, true);
 
 					if (!low->isTerminal())
 					{
@@ -621,19 +560,18 @@ namespace stu
 
 		void createBestOrder()
 		{
-
 		}
 
 		bool use(std::string input) const
 		{
-			if (!root)
+			if (!m_root)
 			{
 				return false;
 			}
 
-			if (input.size() != order.size())
+			if (input.size() != m_order.size())
 			{
-				std::cout << "\nInvalid input, expected length of: " << order.size() << ". Provided " << input.size() << "\n\n";
+				std::cout << "\nInvalid input, expected length of: " << m_order.size() << ". Provided " << input.size() << "\n\n";
 				return false;
 			}
 
@@ -643,13 +581,13 @@ namespace stu
 
 			for (int i = 0; i < input.size(); i++)
 			{
-				char var = order[i];
+				char var = m_order[i];
 				int value = input[i] - '0';
 
 				varToValue[var] = value;
 			}
 
-			Node* current = root;
+			auto current = m_root;
 
 			while (!current->isTerminal())
 			{
@@ -670,21 +608,25 @@ namespace stu
 			return current->getValue();
 		}
 
-		Node* getRoot()
+		NodePtr& root()
 		{
-			return root;
+			return m_root;
 		}
 
+		const NodePtr& root() const
+		{
+			return m_root;
+		}
 
 	private:
-		std::string formula{};
-		std::string order{};
+		std::string m_formula{};
+		std::string m_order{};
 
 		// Keep track of unique nodes
-		std::unordered_map<std::string, Node*> allNodes;
-		Node* root{};
+		std::unordered_map<std::string, NodePtr> m_allNodes;
+		NodePtr m_root{};
 
-		Node terminalFalse{"0", 0};
-		Node terminalTrue{"1", 0};
+		NodePtr m_terminalFalse = std::make_shared<Node>("0", 0);
+		NodePtr m_terminalTrue = std::make_shared<Node>("1", 0);
 	};
 }

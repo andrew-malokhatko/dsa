@@ -41,11 +41,11 @@ TEST_F(BDDTests, CreateSingleVariableBDD)
 
 	stu::bdd bdd(formula, order);
 
-	ASSERT_NE(bdd.getRoot(), nullptr);
-	EXPECT_EQ(bdd.getRoot()->formula, "x");
+	ASSERT_NE(bdd.root(), nullptr);
+	EXPECT_EQ(bdd.root()->formula, "x");
 
-	EXPECT_EQ(bdd.getRoot()->low->formula, "0");
-	EXPECT_EQ(bdd.getRoot()->high->formula, "1");
+	EXPECT_EQ(bdd.root()->low->formula, "0");
+	EXPECT_EQ(bdd.root()->high->formula, "1");
 }
 
 TEST_F(BDDTests, CreateBasicPlusBDD)
@@ -55,13 +55,12 @@ TEST_F(BDDTests, CreateBasicPlusBDD)
 
 	stu::bdd bdd(formula, order);
 
-	ASSERT_NE(bdd.getRoot(), nullptr);
-	EXPECT_EQ(bdd.getRoot()->formula, "x+y");
+	ASSERT_NE(bdd.root(), nullptr);
+	EXPECT_EQ(bdd.root()->formula, "x+y");
 
-	EXPECT_EQ(bdd.getRoot()->low->formula, "y");
-	EXPECT_EQ(bdd.getRoot()->high->formula, "1");
+	EXPECT_EQ(bdd.root()->low->formula, "y");
+	EXPECT_EQ(bdd.root()->high->formula, "1");
 }
-
 TEST_F(BDDTests, CreateBasicMultiplyBDD)
 {
 	std::string formula = "xy";
@@ -69,11 +68,11 @@ TEST_F(BDDTests, CreateBasicMultiplyBDD)
 
 	stu::bdd bdd(formula, order);
 
-	ASSERT_NE(bdd.getRoot(), nullptr);
-	EXPECT_EQ(bdd.getRoot()->formula, "xy");
+	ASSERT_NE(bdd.root(), nullptr);
+	EXPECT_EQ(bdd.root()->formula, "xy");
 
-	EXPECT_EQ(bdd.getRoot()->low->formula, "0");
-	EXPECT_EQ(bdd.getRoot()->high->formula, "y");
+	EXPECT_EQ(bdd.root()->low->formula, "0");
+	EXPECT_EQ(bdd.root()->high->formula, "y");
 }
 
 TEST_F(BDDTests, CreateBddNegativeMultiply)
@@ -83,8 +82,8 @@ TEST_F(BDDTests, CreateBddNegativeMultiply)
 
 	stu::bdd bdd(formula, order);
 
-	EXPECT_EQ(bdd.getRoot()->low->formula, "y");
-	EXPECT_EQ(bdd.getRoot()->high->formula, "0");
+	EXPECT_EQ(bdd.root()->low->formula, "y");
+	EXPECT_EQ(bdd.root()->high->formula, "0");
 }
 
 TEST_F(BDDTests, CreateBddNegativePlus)
@@ -94,8 +93,8 @@ TEST_F(BDDTests, CreateBddNegativePlus)
 
 	stu::bdd bdd(formula, order);
 
-	EXPECT_EQ(bdd.getRoot()->low->formula, "1");
-	EXPECT_EQ(bdd.getRoot()->high->formula, "y");
+	EXPECT_EQ(bdd.root()->low->formula, "1");
+	EXPECT_EQ(bdd.root()->high->formula, "y");
 }
 
 TEST_F(BDDTests, CreateBddNegativePlus2)
@@ -105,10 +104,10 @@ TEST_F(BDDTests, CreateBddNegativePlus2)
 
 	stu::bdd bdd(formula, order);
 
-	EXPECT_EQ(bdd.getRoot()->low->formula, "!y");
-	EXPECT_EQ(bdd.getRoot()->low->low->formula, "1");
-	EXPECT_EQ(bdd.getRoot()->low->high->formula, "0");
-	EXPECT_EQ(bdd.getRoot()->high->formula, "1");
+	EXPECT_EQ(bdd.root()->low->formula, "!y");
+	EXPECT_EQ(bdd.root()->low->low->formula, "1");
+	EXPECT_EQ(bdd.root()->low->high->formula, "0");
+	EXPECT_EQ(bdd.root()->high->formula, "1");
 }
 
 TEST_F(BDDTests, ReductionTestTypeSPlusInRoot)
@@ -118,7 +117,7 @@ TEST_F(BDDTests, ReductionTestTypeSPlusInRoot)
 
 	stu::bdd bdd(formula, order);
 
-	EXPECT_EQ(bdd.getRoot()->formula, "1");
+	EXPECT_EQ(bdd.root()->formula, "1");
 }
 
 TEST_F(BDDTests, ReductionTestTypeSPlus)
@@ -128,7 +127,7 @@ TEST_F(BDDTests, ReductionTestTypeSPlus)
 
 	stu::bdd bdd(formula, order);
 
-	EXPECT_EQ(bdd.getRoot()->formula, "1");
+	EXPECT_EQ(bdd.root()->formula, "1");
 }
 
 
@@ -239,7 +238,7 @@ void testFromFile(std::string functionName, std::string_view fileName)
 	}
 }
 
-
+#if 0
 // functional test
 TEST_F(BDDTests, FileTestFunc1)
 {
@@ -261,8 +260,11 @@ TEST_F(BDDTests, FileTestFunc4)
 {
 	testFromFile(__FUNCTION__, "resources/bdd_test_func4.txt");
 } 
+#endif
 
-//TEST_F(BDDTests, FileTest)
-//{
-//	testFromFile(__FUNCTION__, "resources/bdd_test_output.txt");
-//}
+#if 1
+TEST_F(BDDTests, FileTest)
+{
+	testFromFile(__FUNCTION__, "resources/bdd_test_output.txt");
+}
+#endif

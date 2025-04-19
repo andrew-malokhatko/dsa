@@ -1,7 +1,7 @@
 import itertools
 import random
 
-def generate_random_dnf(num_vars=4, num_terms=3, max_term_size=3):
+def generate_random_dnf(num_vars=24, num_terms=100, max_term_size=24):
     variables = [chr(ord('A') + i) for i in range(num_vars)]
     terms = []
 

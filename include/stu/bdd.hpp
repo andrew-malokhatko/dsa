@@ -3,7 +3,9 @@
 #include <vector>
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
 #include <iostream>
+#include <algorithm>
 
 
 namespace stu
@@ -17,7 +19,10 @@ namespace stu
 			std::string formula{};
 			char var{};
 
-			Node* parent{};
+			// After Reduction Type I node
+			// can have multiple parents
+			std::unordered_set<Node*> parents{};
+
 			Node* low{};
 			Node* high{};
 
@@ -29,10 +34,10 @@ namespace stu
 			{
 			}
 
-			bool operator ==(const Node& other)
-			{
-				return formula == other.formula;
-			}
+			//bool operator ==(const Node& other)
+			//{
+			//	return formula == other.formula;
+			//}
 
 			bool isLeaf() const
 			{
@@ -52,7 +57,7 @@ namespace stu
 
 			bool isRoot() const
 			{
-				return parent == nullptr;
+				return parents.empty();
 			}
 
 			bool getValue() const
@@ -61,6 +66,11 @@ namespace stu
 				assert(formula == "1" || formula == "0");
 
 				return formula == "1";
+			}
+
+			bool containsVar(char var) const
+			{
+				return formula.contains(var);
 			}
 
 			// Add a part to a formula and connect with '+' sign
@@ -74,6 +84,11 @@ namespace stu
 
 				formula += '+';
 				formula += part;
+			}
+
+			void addParent(Node* node)
+			{
+				parents.insert(node);
 			}
 
 			void replaceChild(Node* old, Node* newChild)
@@ -91,7 +106,10 @@ namespace stu
 					assert(false);
 				}
 
-				newChild->parent = this;
+				if (!newChild->isTerminal())
+				{
+					newChild->addParent(this);
+				}
 			}
 		};
 
@@ -172,6 +190,76 @@ namespace stu
 			return true;
 		}
 
+		std::string sortDnf(const std::string& dnf)
+		{
+			std::vector<std::string> terms = split(dnf, '+');
+
+			for (std::string& term : terms)
+			{
+				std::vector<char> literals;
+				std::vector<bool> negations;
+
+				// Extract literals and their negation status
+				for (size_t i = 0; i < term.length(); ++i)
+				{
+					if (term[i] == '!')
+					{
+						++i;
+						if (i < term.length()) 
+						{
+							literals.push_back(term[i]);
+							negations.push_back(true);
+						}
+					}
+					else 
+					{
+						literals.push_back(term[i]);
+						negations.push_back(false);
+					}
+				}
+
+				// Sort literals while maintaining negation status
+				std::vector<std::pair<char, bool>> literal_pairs;
+				for (size_t i = 0; i < literals.size(); ++i)
+				{
+					literal_pairs.emplace_back(literals[i], negations[i]);
+				}
+
+				std::sort(literal_pairs.begin(), literal_pairs.end(),
+					[](const auto& a, const auto& b) {
+						return a.first < b.first;
+					});
+
+				// Reconstruct sorted term
+				std::string sorted_term;
+				for (const auto& pair : literal_pairs)
+				{
+					if (pair.second)
+					{
+						sorted_term += '!';
+					}
+					sorted_term += pair.first;
+				}
+				term = sorted_term;
+			}
+
+			// Sort terms lexicographically
+			std::sort(terms.begin(), terms.end());
+
+			// Join terms back together
+			std::string result;
+			for (size_t i = 0; i < terms.size(); ++i)
+			{
+				result += terms[i];
+				if (i < terms.size() - 1)
+				{
+					result += '+';
+				}
+			}
+
+			return result;
+		}
+
 	public:
 
 		bool isNegative(const std::string& str, char symbol)
@@ -199,6 +287,9 @@ namespace stu
 				if (!hasVar)
 				{
 					result->formula = formula;
+
+					// no need to sort, assume it was sorted
+					// on previous iteration
 					return result;
 				}
 
@@ -221,6 +312,7 @@ namespace stu
 					return &terminalFalse;
 				}
 
+				result->formula = sortDnf(result->formula);
 				return result;
 			}
 
@@ -239,7 +331,7 @@ namespace stu
 				{
 					// try to evaluate the expression to true
 					// evaluation to fasle will be handled later in AND
-					if (hasOnly(part, currentVar) && ((value && !isNeg) || (!value && isNeg)) )
+					if (hasOnly(part, currentVar) && ((value && !isNeg) || (!value && isNeg)))
 					{
 						delete result;
 						return &terminalTrue;
@@ -255,6 +347,7 @@ namespace stu
 
 			if (!result->isEmpty())
 			{
+				result->formula = sortDnf(result->formula);
 				return result;
 			}
 
@@ -273,6 +366,20 @@ namespace stu
 
 			if (!node->isTerminal())
 			{
+				// if node has 2 or more parents, set other parents pointers
+				// to nullptr to avoid double deletion
+				for (Node* parent : node->parents)
+				{
+					if (node == parent->low)
+					{
+						parent->low = nullptr;
+					}
+					if (node == parent->high)
+					{
+						parent->high = nullptr;
+					}
+				}
+
 				delete node;
 			}
 		}
@@ -306,11 +413,146 @@ namespace stu
 			}
 		}
 
-		// recursive function to redcue the bdd
-		void reduce()
+		// queue is nodes that require further calculations
+		bool reduceTypeI(Node* node)
 		{
+			bool reduced = false;
 
+			// make function suitable for both low and high nodes
+			if (!node->isTerminal() && allNodes.contains(node->formula))
+			{
+				// delete old node, and substitute it with exitsing node from allNodes
+				Node* oldNode = node;
+				node = allNodes[node->formula];
+
+				// move all parents of oldNode to existing node
+				for (Node* parent : oldNode->parents)
+				{
+					assert(oldNode == parent->low || oldNode == parent->high);
+
+					Node** insertPos = (oldNode == parent->low) ? &parent->low : &parent->high;
+
+					node->addParent(parent);
+					*insertPos = node;
+
+					reduced = true;
+				}
+
+				delete oldNode;
+			}
+
+			return reduced;
 		}
+
+		// in case that low and high are the same
+		// current node appears uselless, delete it
+		// and place low or high on it's place 
+		// return value signals success of the reduction
+		bool reduceTypeS(Node* parent)
+		{
+			if (!parent || parent->isTerminal())
+			{
+				return false;
+			}
+
+			Node* low = parent->low;
+			Node* high = parent->high;
+
+			if (low->formula == high->formula)
+			{
+				// sort the parents from longest to shortest to prevent
+				// iteration on the deleted nodes
+				std::vector<Node*> parents(parent->parents.begin(), parent->parents.end());
+				std::sort(parents.begin(), parents.end(),
+					[](const Node* a, const Node* b)
+					{
+						return a->formula.size() > b->formula.size();
+					});
+
+				auto it = std::find(low->parents.begin(), low->parents.end(), parent);
+				if (it != low->parents.end())
+				{
+					low->parents.erase(it);
+				}
+
+				if (parent->isRoot())
+				{
+					root = low;
+				}
+				else
+				{
+					// replace parent with low in parents parent
+					for (Node* pParent : parent->parents)
+					{
+						pParent->replaceChild(parent, low);
+					}
+				}
+
+				// low may be a pointer to high
+				// so if it is, it cant be deleted
+				if (!high->isTerminal() && high != low)
+				{
+					// only delete high when it's not terminal !!!
+					// otherwise member terminal node is deleted
+					delete high;
+				}
+
+				if (parent->formula != low->formula)
+				{
+					allNodes.erase(parent->formula);
+				}
+				delete parent;
+
+				for (Node* oldParent : parents)
+				{
+					reduceTypeS(oldParent);
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+
+		// returns true, if further reduction is needed
+		// also fills the array of nodes that require evaluation
+		void reduce(Node* node, std::queue<Node*>& nodes)
+		{
+			Node* low = node->low;
+			Node* high = node->high;
+
+
+			// store copy of parents in case reduceTypeS
+			// fires and dletes the node
+			//std::vector<Node*> parents = node->parents;
+			if (low && !low->isTerminal() && !reduceTypeI(low))
+			{
+				nodes.push(low);
+				allNodes[low->formula] = low;
+			}
+
+			bool reducedS = reduceTypeS(node);
+
+			// when reduced with S is applied, high node is deleted
+			if (!reducedS)
+			{
+				if (high && !high->isTerminal() && !reduceTypeI(high))
+				{
+					nodes.push(high);
+					allNodes[high->formula] = high;
+				}
+			}
+
+			// try to reduce parents
+			//if (reducedS)
+			//{
+			//	for (Node* parent : parents)
+			//	{
+			//		reduceTypeS(parent);
+			//	}
+			//}
+		}
+
 
 		void create(const std::string& inputFormula, const std::string& inputOrder)
 		{
@@ -319,6 +561,8 @@ namespace stu
 				return;
 			}
 
+			allNodes.clear();
+
 			formula = inputFormula;
 			order = inputOrder;
 
@@ -326,70 +570,51 @@ namespace stu
 			removeChars(order, ' ');
 			removeChars(formula, ' ');
 
-			// Node of the current layer
-			root = new Node(formula, inputOrder[0]);
+			delete root;
+			root = new Node(formula, 0);
+			allNodes[root->formula] = root;
+
 			std::queue<Node*> nodes;
 			nodes.push(root);
 
+			//allNodes[terminalFalse.formula] = &terminalFalse;
+			//allNodes[terminalTrue.formula] = &terminalTrue;
+
 			for (int i = 0; i < inputOrder.size(); i++)
 			{
-				int layerSize = nodes.size();
 				char currentVar = inputOrder[i];
 
-				for (int i = 0; i < layerSize; i++)
+				for (int k = 0, layerSize = nodes.size(); k < layerSize; k++)
 				{
 					Node* node = nodes.front();
 					node->var = currentVar;
-
 					nodes.pop();
+
+					// skip the node on this iterationm, if it's not influenced
+					// by current variable
+					if (!node->containsVar(currentVar))
+					{
+						nodes.push(node);
+						continue;
+					}
 
 					Node* low = evaluate(node->formula, currentVar, false);
 					Node* high = evaluate(node->formula, currentVar, true);
 
-					// reduction Type S
-					// in case that low and high are the same
-					// current node appears uselless, delete it
-					// and place low or high on it's place 
-					//if (low == high)
-					//{
-					//	if (node->isRoot())
-					//	{
-					//		root = low;
-					//	}
-					//	else
-					//	{	
-					//		node->parent->replaceChild(node, low);
-					//	}
-
-					//	if (!low->isTerminal())
-					//	{
-					//		nodes.push(low);
-
-					//		// only delete high when it's not terminal !!!
-					//		// otherwise member terminal node is deleted
-					//		delete high;
-					//	}
-
-					//	delete node;
-
-					//	continue;
-					//}
-
 					if (!low->isTerminal())
 					{
-						nodes.push(low);
+						low->addParent(node);
 					}
 
 					if (!high->isTerminal())
 					{
-						nodes.push(high);
+						high->addParent(node);
 					}
 
-					low->parent = node;
-					high->parent = node;
-
 					node->low = low;
-					node->high = high;
+					node->high = high; 
+
+					reduce(node, nodes);
 				}
 			}
 		}
@@ -438,6 +663,8 @@ namespace stu
 				{
 					current = current->high;
 				}
+
+				assert(current);
 			}
 
 			return current->getValue();
@@ -453,6 +680,8 @@ namespace stu
 		std::string formula{};
 		std::string order{};
 
+		// Keep track of unique nodes
+		std::unordered_map<std::string, Node*> allNodes;
 		Node* root{};
 
 		Node terminalFalse{"0", 0};

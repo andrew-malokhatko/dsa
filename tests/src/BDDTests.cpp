@@ -111,25 +111,25 @@ TEST_F(BDDTests, CreateBddNegativePlus2)
 	EXPECT_EQ(bdd.getRoot()->high->formula, "1");
 }
 
-//TEST_F(BDDTests, ReductionTestTypeSPlusInRoot)
-//{
-//	std::string formula = "x + !x";
-//	std::string order = "x";
-//
-//	stu::bdd bdd(formula, order);
-//
-//	EXPECT_EQ(bdd.getRoot()->formula, "1");
-//}
-//
-//TEST_F(BDDTests, ReductionTestTypeSPlus)
-//{
-//	std::string formula = "xy + !x + !y";
-//	std::string order = "xy";
-//
-//	stu::bdd bdd(formula, order);
-//
-//	EXPECT_EQ(bdd.getRoot()->formula, "1");
-//}
+TEST_F(BDDTests, ReductionTestTypeSPlusInRoot)
+{
+	std::string formula = "x + !x";
+	std::string order = "x";
+
+	stu::bdd bdd(formula, order);
+
+	EXPECT_EQ(bdd.getRoot()->formula, "1");
+}
+
+TEST_F(BDDTests, ReductionTestTypeSPlus)
+{
+	std::string formula = "xy + !x + !y";
+	std::string order = "xy";
+
+	stu::bdd bdd(formula, order);
+
+	EXPECT_EQ(bdd.getRoot()->formula, "1");
+}
 
 
 TEST_F(BDDTests, UseSingleVariableBDD)
@@ -239,7 +239,30 @@ void testFromFile(std::string functionName, std::string_view fileName)
 	}
 }
 
-TEST_F(BDDTests, FileTest)
+
+// functional test
+TEST_F(BDDTests, FileTestFunc1)
 {
-	testFromFile(__FUNCTION__, "resources/bdd_test_output.txt");
+	testFromFile(__FUNCTION__, "resources/bdd_test_func1.txt");
 }
+
+// functional test 2
+TEST_F(BDDTests, FileTestFunc2)
+{
+	testFromFile(__FUNCTION__, "resources/bdd_test_func2.txt");
+}
+
+TEST_F(BDDTests, FileTestFunc3)
+{
+	testFromFile(__FUNCTION__, "resources/bdd_test_func3.txt");
+} 
+
+TEST_F(BDDTests, FileTestFunc4)
+{
+	testFromFile(__FUNCTION__, "resources/bdd_test_func4.txt");
+} 
+
+//TEST_F(BDDTests, FileTest)
+//{
+//	testFromFile(__FUNCTION__, "resources/bdd_test_output.txt");
+//}

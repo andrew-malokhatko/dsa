@@ -577,9 +577,6 @@ namespace stu
 			std::queue<Node*> nodes;
 			nodes.push(root);
 
-			//allNodes[terminalFalse.formula] = &terminalFalse;
-			//allNodes[terminalTrue.formula] = &terminalTrue;
-
 			for (int i = 0; i < inputOrder.size(); i++)
 			{
 				char currentVar = inputOrder[i];
@@ -674,7 +671,6 @@ namespace stu
 		{
 			return root;
 		}
-
 
 	private:
 		std::string formula{};

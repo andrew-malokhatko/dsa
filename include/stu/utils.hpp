@@ -1,17 +1,22 @@
+#pragma once
+
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <string>
+
+#include <algorithm>
 
 
 namespace stu
 {
-	std::vector<std::string> split(const std::string& str, char delimeter, int reserve = 100)
+	inline std::vector<std::string> split(const std::string& str, char delimeter, int reserve = 100)
 	{
 		std::vector<std::string> result;
 		result.reserve(reserve);
 
-		size_type lastIndex = 0;
-		size_type currentIndex = 0;
+		size_t lastIndex = 0;
+		size_t currentIndex = 0;
 
 		for (char ch : str)
 		{
@@ -34,9 +39,9 @@ namespace stu
 	}
 
 	// Modifies the string
-	void trim(std::string& str)
+	inline void trim(std::string& str)
 	{
-		static constexpr ch = ' ';
+		static constexpr char ch = ' ';
 
 		size_t write = 0;
 		for (size_t read = 0; read < str.length(); ++read)
@@ -50,7 +55,7 @@ namespace stu
 		str.resize(write);
 	}
 
-	void removeVars(std::string& part, char ch)
+	inline void removeVars(std::string& part, char ch)
 	{
 		size_t write = 0;
 		for (size_t read = 0; read < part.length(); ++read)
@@ -70,7 +75,7 @@ namespace stu
 	}
 
 
-	std::string sortDnf(const std::string& dnf)
+	inline std::string sortDnf(const std::string& dnf)
 	{
 		std::vector<std::string> terms = split(dnf, '+');
 
@@ -122,14 +127,30 @@ namespace stu
 			}
 			term = sorted_term;
 		}
+
+		// Sort terms lexicographically
+		std::sort(terms.begin(), terms.end());
+
+		// Join terms back together
+		std::string result;
+		for (size_t i = 0; i < terms.size(); ++i)
+		{
+			result += terms[i];
+			if (i < terms.size() - 1)
+			{
+				result += '+';
+			}
+		}
+
+		return result;
 	}
 
-	bool isalpha(char ch)
+	inline bool isalpha(char ch)
 	{
 		return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
 	}
 
-	bool countUniqueVariables(std::string formula)
+	inline bool countUniqueVariables(std::string formula)
 	{
 		std::unordered_set<char> uniqueChars;
 
@@ -141,10 +162,10 @@ namespace stu
 			}
 		}
 
-		return uniqueChars.count();
+		return uniqueChars.size();
 	}
 
-	bool hasOnly(const std::string& str, char symbol)
+	inline bool hasOnly(const std::string& str, char symbol)
 	{
 		for (int i = 0; i < str.size(); i++)
 		{
@@ -156,7 +177,7 @@ namespace stu
 		return true;
 	}
 
-	void addAsDisjunction(std::string& formula, std::string& right)
+	inline void addAsDisjunction(std::string& formula, std::string& right)
 	{
 		if (formula.empty())
 		{
@@ -165,21 +186,21 @@ namespace stu
 		}
 
 		formula += '+';
-		formula += part;
+		formula += right;
 	}
 
-	bool isNegative(const std::string& str, char symbol)
+	inline bool isNegative(const std::string& str, char symbol)
 	{
 		auto pos = str.find(symbol);
 		return pos != std::string::npos && pos > 0 && str[pos - 1] == '!';
 	}
 
-	std::string evaluate(const std::string& formula, char currentVar, bool value)
+	inline std::string evaluate(const std::string& formula, char currentVar, bool value)
 	{
 		std::vector<std::string> parts = split(formula, '+');
 
 		// handle empty string
-		if (parts.empty)
+		if (parts.empty())
 		{
 			return "0";
 		}
@@ -187,7 +208,7 @@ namespace stu
 		// handle AND operation
 		if (parts.size() == 1)
 		{
-			const std::string& part = parts[0];
+			std::string& part = parts[0];
 
 			bool isNeg = isNegative(part, currentVar);
 			bool hasVar = part.contains(currentVar);
@@ -197,7 +218,8 @@ namespace stu
 				return part;
 			}
 
-			if ((value && !isNeg) || (!value && isNeg))
+			// if variable is positive
+			if (value != isNeg)
 			{
 				removeVars(part, currentVar);
 
@@ -219,7 +241,7 @@ namespace stu
 
 			if (!hasVar)
 			{
-				result->add(part);
+				addAsDisjunction(result, part);
 			}
 			else
 			{
@@ -238,10 +260,15 @@ namespace stu
 			}
 		}
 
+		if (result.empty())
+		{
+			return "0";
+		}
+
 		return result;
 	}
 
-	bool isPrime(int n)
+	inline bool isPrime(int n)
 	{
 		if (n <= 1) return false;
 		for (int i = 2; i * i <= n; ++i)
@@ -251,7 +278,7 @@ namespace stu
 	}
 
 	// Returns next prime after n or n if it is already prime
-	int nextPrime(int n)
+	inline int nextPrime(int n)
 	{
 		while (!isPrime(n)) ++n;
 		return n;

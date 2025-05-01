@@ -10,8 +10,12 @@ enable_testing()
 add_library(stu INTERFACE
 	include/stu/btree.hpp
 	include/stu/hashmap.hpp
+	include/stu/hashtable.hpp
+	include/stu/list.hpp
 	include/stu/bdd.hpp
-)
+	include/stu/bdd2.hpp
+	include/stu/utils.hpp
+ "include/stu/utils.cpp")
 
 target_include_directories(stu INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

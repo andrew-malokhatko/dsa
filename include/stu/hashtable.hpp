@@ -1,4 +1,6 @@
-#include "stu/utils.hpp"
+#pragma once
+
+#include "utils.hpp"
 
 namespace stu
 {
@@ -7,19 +9,37 @@ namespace stu
 	class hashtable
 	{
 
+	public:
+
+		struct Node
+		{
+			key_type m_key{};
+			value_type m_value{};
+
+			Node* next{};
+			Node* prev{};
+
+			Node() = default;
+
+			Node(key_type key, value_type value) :
+				m_key{ key },
+				m_value{ value }
+			{
+			}
+
+			bool operator== (const Node& other) const
+			{
+				return m_key == other.m_key &&
+					m_value == other.m_value;
+			}
+		};
+
 		struct Bucket
 		{
-			struct Node
-			{
-				key_type m_key{};
-				value_type m_value{};
-
-				Node* next{};
-				Node* prev{};
-			};
-
-			size_t m_size{};
+			size_t size{};
 			Node* root{};
+
+			Bucket() = default;
 
 			~Bucket()
 			{
@@ -39,10 +59,14 @@ namespace stu
 			{
 				Node* current = root;
 
+				// if node is reinserted
+				node->next = nullptr;
+				node->prev = nullptr;
+
 				if (!current)
 				{
 					root = node;
-					m_size++;
+					size++;
 					return true;
 				}
 
@@ -52,12 +76,14 @@ namespace stu
 					{
 						return false;
 					}
-				}
 
+					current = current->next;
+				}
+				
 				current->next = node;
 				node->prev = current;
 
-				m_size++;
+				size++;
 				return true;
 			}
 
@@ -92,15 +118,17 @@ namespace stu
 
 						delete current;
 
-						m_size--;
+						size--;
 						return true;
 					}
+
+					current = current->next;
 				}
 
 				return false;
 			}
 
-			const value_type& search(key_type key)
+			const value_type& search(key_type key) const
 			{
 				Node* current = root;
 
@@ -110,14 +138,16 @@ namespace stu
 					{
 						return current->m_value;
 					}
+
+					current = current->next;
 				}
 
-				return nullptr;
+				return value_type{};
 			}
 
 			const bool empty() const
 			{
-				return size
+				return size;
 			}
 
 			const Node* first() const
@@ -127,18 +157,35 @@ namespace stu
 		};
 
 	private:
-		size_t hash(const void* data, size_t byteSize)
+		size_t hash(const void* data, size_t byteSize) const
 		{
 			size_t hash = 0;
-			const char* prt = (const char*)data;
+			const char* ptr = (const char*)data;
 
 			while (byteSize--)
 			{
-				hash += (hash << 5) + *prt;
-				prt++;
+				hash += (hash << 5) + *ptr;
+				ptr++;
 			}
 
 			return hash + 89;
+		}
+
+		size_t getHash(const key_type& key) const
+		{
+			return hash(static_cast<const void*>(&key), sizeof(key_type)) % m_capacity;
+		}
+
+		Bucket& getBucket(key_type& key)
+		{
+			size_t index = getHash(key);
+
+			return m_buckets[index];
+		}
+
+		const Bucket& getBucket(const key_type& key) const
+		{
+			return m_buckets[getHash(key) % m_capacity];
 		}
 
 	public:
@@ -148,11 +195,17 @@ namespace stu
 			reserve(capacity);
 		}
 
-		bool insert(key_type key, value_type value)
+
+		~hashtable()
 		{
-			size_t index = hash(key, sizeof(key_type)) % m_capacity;
-			
-			Bucket bucket = buckets[index];
+			delete[] m_buckets;
+		}
+
+
+		bool insert(key_type key, value_type value)
+		{	
+			Bucket& bucket = getBucket(key);
+
 			bool result = bucket.insert(key, value);
 
 			if (loadFactor() > maxLoadFactor)
@@ -165,20 +218,25 @@ namespace stu
 
 		bool remove(key_type key)
 		{
-			size_t index = hash(key, sizeof(key_type)) % m_capacity;
-
-			Bucket bucket = buckets[index];
+			Bucket& bucket = getBucket(key);
 
 			return bucket.remove(key);
 		}
 
-		const value_type& search(key_type key)
+		const value_type& search(key_type key) const
 		{
-			size_t index = hash(key, sizeof(key_type)) % m_capacity;
-
-			Bucket bucket = buckets[index];
+			const Bucket& bucket = getBucket(key);
+			
+			assert(contains(key));
 
 			return bucket.search(key);
+		}
+
+		bool contains(key_type key) const
+		{
+			const Bucket& bucket = getBucket(key);
+
+			return bucket.search(key) != value_type{};
 		}
 
 		void setMaxLoadFactor(double newLoadFactor)
@@ -190,19 +248,31 @@ namespace stu
 		{
 			newCapacity = nextPrime(newCapacity);
 
-			Bucket* oldBuckets = buckets;
-			buckets = new Bucket[newCapacity];
+			Bucket* oldBuckets = m_buckets;
+			m_buckets = new Bucket[newCapacity];
 
-			for (Bucket bucket : oldBuckets)
+			size_t oldCapacity = m_capacity;
+			m_capacity = newCapacity;
+
+			for (size_t i = 0; i < oldCapacity; i++)
 			{
-				if (!bucket.empty())
+				Bucket& oldBucket = oldBuckets[i];
+				Node* current = oldBucket.root;
+
+				while (current)
 				{
-					size_t newPlace = hash(bucket.first().m_key, sizeof(key_type)) % newCapacity;
-					buckets[newPlace] = bucket;
+					Node* next = current->next; // remember next before moving
+
+					Bucket newBucket = getBucket(current->m_key);
+					newBucket.insert(current);
+
+					current = next;
 				}
+
+				oldBucket.root = nullptr;
 			}
 
-			m_capacity = newCapacity;
+			delete[] oldBuckets;
 		}
 
 		double loadFactor()
@@ -210,11 +280,20 @@ namespace stu
 			return m_count / m_capacity;
 		}
 
-		~hashtable()
+		Bucket* getBuckets() const
 		{
-			delete[] buckets;
+			return m_buckets;
 		}
 
+		size_t getCapacity() const
+		{
+			return m_capacity;
+		}
+
+		size_t getCount() const
+		{
+			return m_count;
+		}
 
 	
 	private:
@@ -224,6 +303,6 @@ namespace stu
 		size_t m_capacity{};
 		size_t m_count{};
 
-		Bucket* buckets{};
+		Bucket* m_buckets{};
 	};
 }

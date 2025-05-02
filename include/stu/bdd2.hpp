@@ -127,37 +127,39 @@ namespace stu
 
 		void reduceTypeS(Node* parent)
 		{
-			Node* low = parent->low;
-			Node* high = parent->high;
+			//Node* low = parent->low;
+			//Node* high = parent->high;
 
-			if (low == high)
-			{
-				// Move parents from parent to left
-				low->parents = std::move(parent->parents);
+			//if (low == high)
+			//{
+			//	// Move parents from parent to left
+			//	low->parents = std::move(parent->parents);
 
-				// Substitute parent in other nodes (it's parents)
-				Node* current = low->parents.first();
+			//	// Substitute parent in other nodes (it's parents)
+			//	Node* current = low->parents.first();
 
-				while (current)
-				{
-					if (current->low == parent)
-					{
-						current->low = parent;
-					}
-					else
-					{
-						current->high = parent;
-					}
-				}
-				
-				// delete parent
-				parent->high = nullptr;
-				parent->low = nullptr;
+			//	while (current)
+			//	{
+			//		if (current->low == parent)
+			//		{
+			//			current->low = parent;
+			//		}
+			//		else
+			//		{
+			//			current->high = parent;
+			//		}
 
-				m_nodes.erase(parent->formula);
+			//		current = current->
+			//	}
+			//	
+			//	// delete parent
+			//	parent->high = nullptr;
+			//	parent->low = nullptr;
 
-				delete parent;
-			}
+			//	m_nodes.erase(parent->formula);
+
+			//	delete parent;
+			//}
 
 			// recursion
 

@@ -1,158 +1,48 @@
 #pragma once
 
 #include "utils.hpp"
+#include "unique_list.hpp"
 
 namespace stu
 {
+	template <typename first_t, typename second_t>
+	struct pair
+	{
+		first_t first;
+		second_t second;
+	};
 	
-	template<typename key_type, typename value_type>
+	template<typename key_type, typename value_type, typename list_type = stu::unique_list<stu::pair<key_type, value_type>>>
 	class hashtable
 	{
-
-	public:
-
-		struct Node
-		{
-			key_type m_key{};
-			value_type m_value{};
-
-			Node* next{};
-			Node* prev{};
-
-			Node() = default;
-
-			Node(key_type key, value_type value) :
-				m_key{ key },
-				m_value{ value }
-			{
-			}
-
-			bool operator== (const Node& other) const
-			{
-				return m_key == other.m_key &&
-					m_value == other.m_value;
-			}
-		};
-
 		struct Bucket
 		{
-			size_t size{};
-			Node* root{};
-
-			Bucket() = default;
-
-			~Bucket()
-			{
-				Node* current = root;
-
-				while (current)
-				{
-					Node* next = current->next;
-
-					delete current;
-					current = next;
-				}
-			}
-
-
-			bool insert(Node* node)
-			{
-				Node* current = root;
-
-				// if node is reinserted
-				node->next = nullptr;
-				node->prev = nullptr;
-
-				if (!current)
-				{
-					root = node;
-					size++;
-					return true;
-				}
-
-				while (current->next)
-				{
-					if (current->m_key == node->m_key)
-					{
-						return false;
-					}
-
-					current = current->next;
-				}
-				
-				current->next = node;
-				node->prev = current;
-
-				size++;
-				return true;
-			}
+			list_type values{};
 
 			bool insert(key_type key, value_type value)
 			{
-				return insert(new Node(key, value));
+				//return values.insert({ key, value });
+				return {};
 			}
 
 			bool remove(key_type key)
 			{
-				Node* current = root;
-
-				while (current)
-				{
-					if (current->m_key == key)
-					{
-						if (current->prev)
-						{
-							assert(current->prev->next == current);
-							current->prev->next = current->next;
-						}
-
-						if (current->next)
-						{
-							current->next->prev = current->prev;
-						}
-
-						if (current == root)
-						{
-							root = current->next;
-						}
-
-						delete current;
-
-						size--;
-						return true;
-					}
-
-					current = current->next;
-				}
-
-				return false;
+				return values.remove(key);
 			}
 
 			const value_type& search(key_type key) const
 			{
-				Node* current = root;
-
-				while (current)
-				{
-					if (current->m_key == key)
-					{
-						return current->m_value;
-					}
-
-					current = current->next;
-				}
-
-				return value_type{};
+				return values.search(key);
 			}
 
-			const bool empty() const
+			bool empty() const
 			{
-				return size;
+				return values.empty();
 			}
 
-			const Node* first() const
+			const value_type& first() const
 			{
-				return root;
+				return values.first();
 			}
 		};
 
@@ -234,9 +124,11 @@ namespace stu
 
 		bool contains(key_type key) const
 		{
-			const Bucket& bucket = getBucket(key);
+			//const Bucket& bucket = getBucket(key);
 
-			return bucket.search(key) != value_type{};
+			//return bucket.search(key) != value_type{};
+			// TODO
+			return false;
 		}
 
 		void setMaxLoadFactor(double newLoadFactor)
@@ -246,33 +138,33 @@ namespace stu
 
 		void reserve(size_t newCapacity)
 		{
-			newCapacity = nextPrime(newCapacity);
+			//newCapacity = nextPrime(newCapacity);
 
-			Bucket* oldBuckets = m_buckets;
-			m_buckets = new Bucket[newCapacity];
+			//Bucket* oldBuckets = m_buckets;
+			//m_buckets = new Bucket[newCapacity];
 
-			size_t oldCapacity = m_capacity;
-			m_capacity = newCapacity;
+			//size_t oldCapacity = m_capacity;
+			//m_capacity = newCapacity;
 
-			for (size_t i = 0; i < oldCapacity; i++)
-			{
-				Bucket& oldBucket = oldBuckets[i];
-				Node* current = oldBucket.root;
+			//for (size_t i = 0; i < oldCapacity; i++)
+			//{
+			//	Bucket& oldBucket = oldBuckets[i];
+			//	Node* current = oldBucket.root;
 
-				while (current)
-				{
-					Node* next = current->next; // remember next before moving
+			//	while (current)
+			//	{
+			//		Node* next = current->next; // remember next before moving
 
-					Bucket newBucket = getBucket(current->m_key);
-					newBucket.insert(current);
+			//		Bucket newBucket = getBucket(current->m_key);
+			//		newBucket.insert(current);
 
-					current = next;
-				}
+			//		current = next;
+			//	}
 
-				oldBucket.root = nullptr;
-			}
+			//	oldBucket.root = nullptr;
+			//}
 
-			delete[] oldBuckets;
+			//delete[] oldBuckets;
 		}
 
 		double loadFactor()

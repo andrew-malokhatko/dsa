@@ -20,6 +20,7 @@ add_executable( StuTests
     ./src/BDD2Tests.cpp
     ./src/TestUtils.cpp
     ./src/HashTableTests.cpp
+    ./src/ListTests.cpp
 )
 
 target_link_libraries(StuTests PRIVATE stu gtest gtest_main)

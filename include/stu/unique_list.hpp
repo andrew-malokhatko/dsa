@@ -3,8 +3,9 @@
 namespace stu
 {
 	template<typename T>
-	class list
+	class unique_list
 	{
+	private:
 		struct Node
 		{
 			T m_value{};
@@ -14,54 +15,17 @@ namespace stu
 
 			Node() = default;
 
-			Node(T value) :
+			Node(T value):
 				m_value{ value }
 			{
 			}
 		};
 
 	public:
-		struct Iterator
-		{
-			Node* n{};
 
-			Iterator& operator++()
-			{
-				assert(n);
-				n = n->next;
-				return *this;
-			}
+		unique_list() = default;
 
-			Iterator operator++(int)
-			{
-				assert(n);
-				Iterator i{ *this };
-				n = n->next;
-				return i;
-			}
-
-			T& operator*()
-			{
-				assert(n);
-				return n->m_value;
-			}
-
-			const T& operator*() const
-			{
-				assert(n);
-				return n->m_value;
-			}
-
-			bool operator==(const Iterator& i) const
-			{
-				return n == i.n;
-			}
-		};
-
-	public:
-		list() = default;
-
-		~list()
+		~unique_list()
 		{
 			clear();
 		}
@@ -81,20 +45,28 @@ namespace stu
 			m_root = nullptr;
 		}
 
-		void insert(T value)
+		template<typename T>
+		bool insert(T&& value)
 		{
-			Node* next = m_root;
-			m_root = new Node(value);
+			Node* current = m_root;
 
-			m_root->next = next;
-			
-			if (next)
+			while (current->next)
 			{
-				next->prev = m_root;
+				if (current->m_value == value)
+				{
+					return false;
+				}
+
+				current = current->next;
 			}
+
+			current->next = new Node(std::forward<T>(value));
+			current->next->prev = current->next;
+
+			return true;
 		}
 
-		bool contains(const T& value) const
+		bool contains(T value) const
 		{
 			Node* current = m_root;
 
@@ -111,7 +83,7 @@ namespace stu
 			return false;
 		}
 
-		bool remove(const T& value)
+		bool remove(T value)
 		{
 			Node* current = m_root;
 
@@ -157,15 +129,6 @@ namespace stu
 			return m_root->m_value;
 		}
 
-		Iterator begin()
-		{
-			return Iterator{ m_root };
-		}
-
-		Iterator end()
-		{
-			return Iterator{ nullptr };
-		}
 
 	private:
 		size_t m_size{};

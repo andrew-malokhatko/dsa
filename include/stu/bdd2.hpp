@@ -93,7 +93,15 @@ namespace stu
 
 		~bdd2()
 		{
+			clear();
+		}
 
+		void clear()
+		{
+			for (auto& [formula, node] : m_nodes)
+			{
+				delete node;
+			}
 		}
 
 		void create(std::string formula, std::string order)
@@ -158,6 +166,19 @@ namespace stu
 		}
 
 	private:
+
+	/*	void clear(Node* node)
+		{
+			if (!node)
+			{
+				return;
+			}
+
+			clear(node->low);
+			clear(node->high);
+
+			delete node;
+		}*/
 
 		void reduceTypeS(Node* parent)
 		{

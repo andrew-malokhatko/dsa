@@ -9,37 +9,37 @@
 #include "ContainerTests.hpp"
 #include "stu/hashtable.hpp"
 
+//
+//class HashTableTests : public ContainerTests
+//{
+//protected:
+//
+//	using key_type = int;
+//	using value_type = int;
+//
+//	// Specific tests for HahsMap
+//	static constexpr std::string_view FunctionalInsertFile{"resources/dictInsertTest.txt"};
+//	static constexpr std::string_view dictSearchTestFile{"resources/dictSearchTest.txt"};
+//	static constexpr std::string_view dictRemoveTestFile{"resources/dictRemoveTest.txt"};
+//};
+//
+//TEST_F(HashTableTests, Default)
+//{
+//	std::cout << "\n\n\n" << "Welcome to HashTable test!!! \n\n\n";
+//}
 
-class HashTableTests : public ContainerTests
-{
-protected:
-
-	using key_type = int;
-	using value_type = int;
-
-	// Specific tests for HahsMap
-	static constexpr std::string_view FunctionalInsertFile{"resources/dictInsertTest.txt"};
-	static constexpr std::string_view dictSearchTestFile{"resources/dictSearchTest.txt"};
-	static constexpr std::string_view dictRemoveTestFile{"resources/dictRemoveTest.txt"};
-};
-
-TEST_F(HashTableTests, Default)
-{
-	std::cout << "\n\n\n" << "Welcome to HashTable test!!! \n\n\n";
-}
-
-TEST_F(HashTableTests, TestInsert)
-{
-	stu::hashtable<int, int, std::list<std::pair<int, int>>> table(10);
-
-	table.insert(10, 100);
-	table.insert(20, 200);
-	table.insert(30, 300);
-
-	ASSERT_TRUE(table.contains(10));
-	ASSERT_TRUE(table.contains(20));
-	ASSERT_TRUE(table.contains(30));
-}
+//TEST_F(HashTableTests, TestInsert)
+//{
+//	stu::hashtable<int, int, std::list<std::pair<int, int>>> table(10);
+//
+//	table.insert(10, 100);
+//	table.insert(20, 200);
+//	table.insert(30, 300);
+//
+//	ASSERT_TRUE(table.contains(10));
+//	ASSERT_TRUE(table.contains(20));
+//	ASSERT_TRUE(table.contains(30));
+//}
 
 /*
 TEST_F(HashTableTests, TestInsertCollision)

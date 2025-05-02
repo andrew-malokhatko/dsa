@@ -3,8 +3,9 @@
 #include <string>
 #include <cassert>
 #include <unordered_map>
-#include "hashtable.hpp"
-#include "list.hpp"
+#include <set>
+//#include "hashtable.hpp"
+//#include "list.hpp"
 #include "utils.hpp"
 
 namespace stu
@@ -13,12 +14,33 @@ namespace stu
 	{
 	public:
 
+		struct Node;
+
+		struct NodeFormulaLengthCompare
+		{
+			// Longer formulas come first
+			bool operator()(const Node* a, const Node* b) const
+			{
+				assert(a);
+				assert(b);
+
+				if (a->formula.size() != b->formula.size())
+				{
+					return a->formula.size() > b->formula.size();
+				}
+
+				// avoid duplicates becauuse comp(a,b) and comp(b,a) both false 
+				return a->formula < b->formula;
+			}
+		};
+
 		struct Node
 		{
 			std::string formula{};
 			char var{};
 
-			list<Node*> parents{};
+			//list<Node*> parents{};
+			std::set<Node*, NodeFormulaLengthCompare> parents{};
 			Node* low{};
 			Node* high{};
 
@@ -50,17 +72,28 @@ namespace stu
 				return parents.empty();
 			}
 
+			bool isEvaluated() const
+			{
+				return low && high;
+			}
+
 			bool getValue()
 			{
 				return formula == "1";
 			}
 		};
 
+
 	public:
 
 		bdd2(std::string formula, std::string order)
 		{
 			create(std::move(formula), std::move(order));
+		}
+
+		~bdd2()
+		{
+
 		}
 
 		void create(std::string formula, std::string order)
@@ -76,6 +109,7 @@ namespace stu
 			m_formula = std::move(formula);
 
 			m_root = new Node(m_formula);
+			m_nodes[m_root->formula] = m_root;
 
 			createRecursive(m_root, 0);
 		}
@@ -127,42 +161,45 @@ namespace stu
 
 		void reduceTypeS(Node* parent)
 		{
-			//Node* low = parent->low;
-			//Node* high = parent->high;
+			Node* low = parent->low;
+			Node* high = parent->high;
 
-			//if (low == high)
-			//{
-			//	// Move parents from parent to left
-			//	low->parents = std::move(parent->parents);
+			if (low == high)
+			{
+				// Move parents from parent to temporary set
+				// Not to left directly as it may be deleted further in the recursion
+				std::set<Node*, NodeFormulaLengthCompare> p_parents = parent->parents;
+				low->parents = std::move(parent->parents);
 
-			//	// Substitute parent in other nodes (it's parents)
-			//	Node* current = low->parents.first();
+				// Substitute parent in other nodes (it's parents)
+				for (Node* parent_p : p_parents)
+				{
+					if (parent_p->low == parent)
+					{
+						parent_p->low = low;
+					}
+					else
+					{
+						parent_p->high = low;
+					}
+				}
 
-			//	while (current)
-			//	{
-			//		if (current->low == parent)
-			//		{
-			//			current->low = parent;
-			//		}
-			//		else
-			//		{
-			//			current->high = parent;
-			//		}
+				if (parent == m_root)
+				{
+					m_root = low;
+				}
 
-			//		current = current->
-			//	}
-			//	
-			//	// delete parent
-			//	parent->high = nullptr;
-			//	parent->low = nullptr;
+				m_nodes.erase(parent->formula);
+				parent->high = nullptr;
+				parent->low = nullptr;
 
-			//	m_nodes.erase(parent->formula);
+				delete parent;
 
-			//	delete parent;
-			//}
-
-			// recursion
-
+				for (Node* parent_p : p_parents)
+				{
+					reduceTypeS(parent_p);
+				}
+			}
 		}
 
 		// creates and adds node to m_nodes if such node does not exist yet
@@ -174,14 +211,11 @@ namespace stu
 			{
 				node = m_nodes[formula];
 				node->parents.insert(parent);
-				//node = m_nodes.search(formula);
-				//node.addParent(parent);
 			}
 			else
 			{
 				node = new Node(formula, parent);
 				m_nodes[formula] = node;
-				//m_nodes.insert(formula, node);
 			}
 
 			return node;
@@ -189,12 +223,24 @@ namespace stu
 
 		void createRecursive(Node* parent, int order)
 		{
-			if (order >= m_order.size() || parent->isTerminal())
+			if (parent->isTerminal() || parent->isEvaluated())
 			{
 				return;
 			}
 
-			parent->var = m_order[order];
+			// skip variable if it is not in the formula
+			do
+			{
+				if (order >= m_order.size())
+				{
+					return;
+				}
+
+				parent->var = m_order[order];
+				++order;
+
+			} while (!parent->formula.contains(parent->var));
+
 
 			std::string lowFormula = evaluate(parent->formula, parent->var, false);
 			std::string highFormula = evaluate(parent->formula, parent->var, true);
@@ -207,7 +253,6 @@ namespace stu
 
 			reduceTypeS(parent);
 
-			++order;
 			createRecursive(low, order);
 			createRecursive(high, order);
 		}
@@ -219,6 +264,5 @@ namespace stu
 		std::string m_order;
 
 		std::unordered_map<std::string, Node*> m_nodes;
-
 	};
 }

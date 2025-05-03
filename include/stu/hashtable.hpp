@@ -1,200 +1,307 @@
-#pragma once
-
-#include "utils.hpp"
-#include "unique_list.hpp"
-
-namespace stu
-{
-	template <typename first_t, typename second_t>
-	struct pair
-	{
-		first_t first;
-		second_t second;
-	};
-	
-	template<typename key_type, typename value_type, typename list_type = stu::unique_list<stu::pair<key_type, value_type>>>
-	class hashtable
-	{
-		struct Bucket
-		{
-			list_type values{};
-
-			bool insert(key_type key, value_type value)
-			{
-				//return values.insert({ key, value });
-				return {};
-			}
-
-			bool remove(key_type key)
-			{
-				return values.remove(key);
-			}
-
-			const value_type& search(key_type key) const
-			{
-				return values.search(key);
-			}
-
-			bool empty() const
-			{
-				return values.empty();
-			}
-
-			const value_type& first() const
-			{
-				return values.first();
-			}
-		};
-
-	private:
-		size_t hash(const void* data, size_t byteSize) const
-		{
-			size_t hash = 0;
-			const char* ptr = (const char*)data;
-
-			while (byteSize--)
-			{
-				hash += (hash << 5) + *ptr;
-				ptr++;
-			}
-
-			return hash + 89;
-		}
-
-		size_t getHash(const key_type& key) const
-		{
-			return hash(static_cast<const void*>(&key), sizeof(key_type)) % m_capacity;
-		}
-
-		Bucket& getBucket(key_type& key)
-		{
-			size_t index = getHash(key);
-
-			return m_buckets[index];
-		}
-
-		const Bucket& getBucket(const key_type& key) const
-		{
-			return m_buckets[getHash(key) % m_capacity];
-		}
-
-	public:
-
-		hashtable(size_t capacity = 500)
-		{
-			reserve(capacity);
-		}
-
-
-		~hashtable()
-		{
-			delete[] m_buckets;
-		}
-
-
-		bool insert(key_type key, value_type value)
-		{	
-			Bucket& bucket = getBucket(key);
-
-			bool result = bucket.insert(key, value);
-
-			if (loadFactor() > maxLoadFactor)
-			{
-				reserve(m_capacity * treshold);
-			}
-
-			return result;
-		}
-
-		bool remove(key_type key)
-		{
-			Bucket& bucket = getBucket(key);
-
-			return bucket.remove(key);
-		}
-
-		const value_type& search(key_type key) const
-		{
-			const Bucket& bucket = getBucket(key);
-			
-			assert(contains(key));
-
-			return bucket.search(key);
-		}
-
-		bool contains(key_type key) const
-		{
-			//const Bucket& bucket = getBucket(key);
-
-			//return bucket.search(key) != value_type{};
-			// TODO
-			return false;
-		}
-
-		void setMaxLoadFactor(double newLoadFactor)
-		{
-			maxLoadFactor = newLoadFactor;
-		}
-
-		void reserve(size_t newCapacity)
-		{
-			//newCapacity = nextPrime(newCapacity);
-
-			//Bucket* oldBuckets = m_buckets;
-			//m_buckets = new Bucket[newCapacity];
-
-			//size_t oldCapacity = m_capacity;
-			//m_capacity = newCapacity;
-
-			//for (size_t i = 0; i < oldCapacity; i++)
-			//{
-			//	Bucket& oldBucket = oldBuckets[i];
-			//	Node* current = oldBucket.root;
-
-			//	while (current)
-			//	{
-			//		Node* next = current->next; // remember next before moving
-
-			//		Bucket newBucket = getBucket(current->m_key);
-			//		newBucket.insert(current);
-
-			//		current = next;
-			//	}
-
-			//	oldBucket.root = nullptr;
-			//}
-
-			//delete[] oldBuckets;
-		}
-
-		double loadFactor()
-		{
-			return m_count / m_capacity;
-		}
-
-		Bucket* getBuckets() const
-		{
-			return m_buckets;
-		}
-
-		size_t getCapacity() const
-		{
-			return m_capacity;
-		}
-
-		size_t getCount() const
-		{
-			return m_count;
-		}
-
-	
-	private:
-		double maxLoadFactor = 1.0;
-		double treshold;
-
-		size_t m_capacity{};
-		size_t m_count{};
-
-		Bucket* m_buckets{};
-	};
-}
+//#pragma once
+//
+//#include "utils.hpp"
+//#include "unique_list.hpp"
+//#include "set.hpp"
+//
+//namespace stu
+//{
+//	template<typename key_type, typename value_type>
+//	class hashtable
+//	{
+//		struct Bucket
+//		{
+//			struct BucketNode
+//			{
+//				key_type m_key;
+//				value_type m_value;
+//
+//				BucketNode* next;
+//
+//				BucketNode(key_type key, value_type value, BucketNode* n = nullptr)
+//					: m_key(key),
+//					m_value(value),
+//					next(n)
+//				{
+//				}
+//			};
+//
+//			struct Iterator
+//			{
+//				BucketNode* n;
+//
+//				Iterator(BucketNode* node) : n(node) {}
+//
+//				Iterator& operator++()
+//				{
+//					if (n) n = n->next;
+//					return *this;
+//				}
+//
+//				Iterator operator++(int)
+//				{
+//					Iterator temp = *this;
+//					if (n) n = n->next;
+//					return temp;
+//				}
+//
+//				const BucketNode& operator*()
+//				{
+//					return *n;
+//				}
+//
+//				bool operator==(const Iterator& other) const
+//				{
+//					return n == other.n;
+//				}
+//			};
+//
+//			BucketNode* m_first = nullptr;
+//			size_t m_size = 0;
+//
+//			~Bucket()
+//			{
+//				BucketNode* current = m_first;
+//				while (current != nullptr)
+//				{
+//					BucketNode* next = current->next;
+//					delete current;
+//					current = next;
+//				}
+//			}
+//
+//			bool insert(key_type key, value_type value)
+//			{
+//				BucketNode* current = m_first;
+//				while (current != nullptr)
+//				{
+//					if (current->m_key == key)
+//					{
+//						current->m_value = value;
+//						return false; // Key exists, value updated
+//					}
+//					current = current->next;
+//				}
+//
+//				m_first = new BucketNode(key, value, m_first);
+//				m_size++;
+//				return true; // New key inserted
+//			}
+//
+//			bool remove(key_type key)
+//			{
+//				BucketNode* current = m_first;
+//				BucketNode* previous = nullptr;
+//				while (current != nullptr)
+//				{
+//					if (current->m_key == key)
+//					{
+//						if (previous != nullptr)
+//						{
+//							previous->next = current->next;
+//						}
+//						else
+//						{
+//							m_first = current->next;
+//						}
+//
+//						delete current;
+//						m_size--;
+//						return true;
+//					}
+//					previous = current;
+//					current = current->next;
+//				}
+//
+//				return false;
+//			}
+//
+//			bool contains(const key_type& key) const
+//			{
+//				BucketNode* current = m_first;
+//				while (current != nullptr)
+//				{
+//					if (current->m_key == key)
+//					{
+//						return true;
+//					}
+//					current = current->next;
+//				}
+//
+//				return false;
+//			}
+//
+//			// Preferably should be used after contains
+//			const value_type& search(const key_type& key) const
+//			{
+//				BucketNode* current = m_first;
+//				while (current != nullptr)
+//				{
+//					if (current->m_key == key)
+//					{
+//						return current->m_value;
+//					}
+//					current = current->next;
+//				}
+//
+//				return value_type{};
+//			}
+//
+//			bool empty() const
+//			{
+//				return m_size == 0;
+//			}
+//
+//			Iterator begin()
+//			{
+//				return Iterator(m_first);
+//			}
+//
+//			Iterator end()
+//			{
+//				return Iterator(nullptr);
+//			}
+//		};
+//
+//	private:
+//		size_t hash(const void* data, size_t byteSize) const
+//		{
+//			size_t hash = 0;
+//			const char* ptr = (const char*)data;
+//
+//			while (byteSize--)
+//			{
+//				hash += (hash << 5) + *ptr;
+//				ptr++;
+//			}
+//
+//			return hash + 89;
+//		}
+//
+//		size_t getHash(const key_type& key) const
+//		{
+//			return hash(static_cast<const void*>(&key), sizeof(key_type)) % m_capacity;
+//		}
+//
+//		Bucket& getBucket(const key_type& key)
+//		{
+//			size_t index = getHash(key);
+//
+//			return m_buckets[index];
+//		}
+//
+//		const Bucket& getBucket(const key_type& key) const
+//		{
+//			return m_buckets[getHash(key) % m_capacity];
+//		}
+//
+//	public:
+//
+//		hashtable(size_t capacity = 500)
+//		{
+//			reserve(capacity);
+//		}
+//
+//
+//		~hashtable()
+//		{
+//			delete[] m_buckets;
+//		}
+//
+//
+//		bool insert(key_type key, value_type value)
+//		{	
+//			Bucket& bucket = getBucket(key);
+//
+//			bool result = bucket.insert(key, value);
+//
+//			if (loadFactor() > maxLoadFactor)
+//			{
+//				reserve(m_capacity * treshold);
+//			}
+//
+//			return result;
+//		}
+//
+//		bool remove(key_type key)
+//		{
+//			Bucket& bucket = getBucket(key);
+//
+//			return bucket.remove(key);
+//		}
+//
+//		const value_type& search(key_type key) const
+//		{
+//			const Bucket& bucket = getBucket(key);
+//			
+//			return bucket.search(key);
+//		}
+//
+//		bool contains(key_type key) const
+//		{
+//			const Bucket& bucket = getBucket(key);
+//
+//			return bucket.contains(key);
+//		}
+//
+//		void setMaxLoadFactor(double newLoadFactor)
+//		{
+//			maxLoadFactor = newLoadFactor;
+//		}
+//
+//		void reserve(size_t newCapacity)
+//		{
+//			newCapacity = nextPrime(newCapacity);
+//			size_t oldCapacity = m_capacity;
+//			m_capacity = newCapacity;
+//
+//			Bucket* oldBuckets = m_buckets;
+//			m_buckets = new Bucket[newCapacity];
+//
+//			for (size_t i = 0; i < oldCapacity; i++)
+//			{
+//				Bucket& oldBucket = oldBuckets[i];
+//				
+//				for (auto& node : oldBucket)
+//				{
+//					Bucket& newBucket = getBucket(node->m_key);
+//					newBucket.insert(node);
+//				}
+//
+//				oldBucket.root = nullptr;
+//			}
+//
+//			delete[] oldBuckets;
+//		}
+//
+//		double loadFactor()
+//		{
+//			return m_count / m_capacity;
+//		}
+//
+//		Bucket* getBuckets() const
+//		{
+//			return m_buckets;
+//		}
+//
+//		size_t getCapacity() const
+//		{
+//			return m_capacity;
+//		}
+//
+//		size_t getCount() const
+//		{
+//			return m_count;
+//		}
+//
+//	
+//	private:
+//		double maxLoadFactor = 1.0;
+//		double treshold = 2.0;
+//
+//		size_t m_capacity{};
+//		size_t m_count{};
+//
+//		Bucket* m_buckets{};
+//	};
+//}

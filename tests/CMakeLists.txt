@@ -21,7 +21,7 @@ add_executable( StuTests
     ./src/TestUtils.cpp
     ./src/HashTableTests.cpp
     ./src/ListTests.cpp
-)
+    ./src/SetTests.cpp)
 
 target_link_libraries(StuTests PRIVATE stu gtest gtest_main)
 

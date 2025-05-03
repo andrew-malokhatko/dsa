@@ -4,8 +4,6 @@
 #include <cassert>
 #include <unordered_map>
 #include <set>
-//#include "hashtable.hpp"
-//#include "list.hpp"
 #include "utils.hpp"
 
 namespace stu
@@ -166,19 +164,6 @@ namespace stu
 		}
 
 	private:
-
-	/*	void clear(Node* node)
-		{
-			if (!node)
-			{
-				return;
-			}
-
-			clear(node->low);
-			clear(node->high);
-
-			delete node;
-		}*/
 
 		void reduceTypeS(Node* parent)
 		{

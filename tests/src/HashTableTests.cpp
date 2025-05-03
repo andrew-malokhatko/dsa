@@ -129,6 +129,40 @@ TEST_F(HashTableTests, RemoveTestNoCollision)
 	map.remove(20);
 	map.remove(30);
 	map.remove(40);
+
+	ASSERT_TRUE(map.getCount() == 0);
+}
+
+TEST_F(HashTableTests, TestReserve2)
+{
+	stu::hashtable<int, int> map(5);
+
+	map.insert(10, 100);
+	map.insert(20, 200);
+	map.insert(30, 300);
+	map.insert(40, 300);
+	map.insert(50, 300); // reserve here
+	map.insert(60, 300); // 
+
+	map.remove(10);
+	map.remove(20);
+	map.remove(30);
+
+	ASSERT_TRUE(map.contains(40));
+	ASSERT_TRUE(map.contains(50));
+	ASSERT_TRUE(map.contains(60));
+
+	ASSERT_FALSE(map.contains(10));
+	ASSERT_FALSE(map.contains(20));
+	ASSERT_FALSE(map.contains(30));
+
+	ASSERT_EQ(map.getCount(), 3);
+
+	map.remove(40);
+	map.remove(50);
+	map.remove(60);
+
+	ASSERT_TRUE(map.empty());
 }
 
 //std::vector<stu::hashtable<int, int>::Node> parseFileMap(std::ifstream& file, int reserve = 1000)

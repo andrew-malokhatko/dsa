@@ -150,27 +150,6 @@ TEST_F(BDD2Tests, UseInvalidInputLength)
 	EXPECT_FALSE(bdd.use("1"));
 }
 
-// TEST_F(BDD2Tests, ReductionTestTypeSPlusInRoot)
-//{
-//	std::string formula = "x + !x";
-//	std::string order = "x";
-//
-//	stu::bdd2 bdd(formula, order);
-//
-//	EXPECT_EQ(bdd.getRoot()->formula, "1");
-// }
-
-// TEST_F(BDD2Tests, ReductionTestTypeSPlus)
-//{
-//	std::string formula = "xy + !x + !y";
-//	std::string order = "xy";
-//
-//	stu::bdd2 bdd(formula, order);
-//
-//	EXPECT_EQ(bdd.getRoot()->formula, "1");
-// }
-
-
 void testFromFileBdd2(std::string functionName, std::string_view fileName)
 {
 	std::cout << "\n" << functionName << "\n";
@@ -241,27 +220,7 @@ TEST_F(BDD2Tests, FileTestFunc4)
 	testFromFileBdd2(__FUNCTION__, "resources/bdd_test_func4.txt");
 }
 
-// TEST_F(BDD2Tests, FileTest)
-//{
-//	testFromFile(__FUNCTION__, "resources/bdd_test_output.txt");
-// }
-
-
-//class UtilsTests : public testing::Test
-//{
-//};
-//
-//
-//TEST_F(UtilsTests, Default)
-//{
-//	std::cout << "\n\n\nWelcome to Utils tests\n\n\n";
-//}
-//
-//TEST_F(UtilsTests, EvaluateTest)
-//{
-//	std::string low = stu::evaluate("C+C", 'C', false);
-//	std::string high = stu::evaluate("C+C", 'C', true);
-//
-//	ASSERT_EQ(low, "0");
-//	ASSERT_EQ(high, "1");
-//}
+TEST_F(BDD2Tests, FileTest)
+{
+	testFromFileBdd2(__FUNCTION__, "resources/bdd_test_output.txt");
+}

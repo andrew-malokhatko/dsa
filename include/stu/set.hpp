@@ -63,9 +63,56 @@ namespace stu
 		};
 
 	public:
+		struct Iterator
+		{
+			const Node* node{};
+
+			bool operator==(const Iterator& rhs) const
+			{
+				return node == rhs.node;
+			}
+
+			const value_type& operator*() const
+			{
+				assert(node);
+				return node->value;
+			}
+
+			Iterator& operator++()
+			{
+				assert(node);
+
+				// 1. Go right and maximum left.
+				if (node->right)
+				{
+					auto current = node->right;
+					while (current && current->left)
+					{
+						current = current->left;
+					}
+
+					node = current;
+					return *this;
+				}
+
+				// 2. If right is not possible the go up till we come from left.
+				auto current = node;
+				auto lastParent = node->parent;
+
+				while (lastParent && current != lastParent->left)
+				{
+					current = lastParent;
+					lastParent = current->parent;
+				}
+
+				node = lastParent;
+				return *this;
+			}
+		};
+
+	public:
 		set()
 		{
-
 		}
 
 		~set()
@@ -182,8 +229,23 @@ namespace stu
 			return m_size;
 		}
 
-	private:
+		Iterator begin()
+		{
+			auto current = m_root;
+			while (current && current->left)
+			{
+				current = current->left;
+			}
 
+			return Iterator{current};
+		}
+
+		Iterator end()
+		{
+			return Iterator{nullptr};
+		}
+
+	private:
 		void clear(Node* node)
 		{
 			if (!node)

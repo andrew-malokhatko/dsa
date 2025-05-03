@@ -242,6 +242,10 @@ namespace stu
 			Bucket& bucket = getBucket(key);
 
 			bool result = bucket.insert(key, value);
+			if (result)
+			{
+				m_count++;
+			}
 
 			if (loadFactor() > maxLoadFactor)
 			{
@@ -254,8 +258,14 @@ namespace stu
 		bool remove(key_type key)
 		{
 			Bucket& bucket = getBucket(key);
+			bool removed = bucket.remove(key);
 
-			return bucket.remove(key);
+			if (removed)
+			{
+				m_count--;
+			}
+
+			return removed;
 		}
 
 		const value_type& search(key_type key) const
@@ -314,7 +324,7 @@ namespace stu
 
 		double loadFactor()
 		{
-			return m_count / m_capacity;
+			return (double)m_count / m_capacity;
 		}
 
 		Bucket* getBuckets() const
@@ -330,6 +340,11 @@ namespace stu
 		size_t getCount() const
 		{
 			return m_count;
+		}
+
+		bool empty()
+		{
+			return m_count == 0;
 		}
 
 	

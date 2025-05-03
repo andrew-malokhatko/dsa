@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <array>
+#include <algorithm>
 
 #include "ContainerTests.hpp"
 #include "stu/set.hpp"
@@ -147,4 +149,46 @@ TEST_F(SetTests, RemoveNodesInSequence) {
     EXPECT_FALSE(testSet.contains(350));
     EXPECT_FALSE(testSet.contains(450));
     EXPECT_FALSE(testSet.contains(550));
+}
+
+TEST_F(SetTests, Iteration)
+{
+	std::array testValues = {400, 300, 500, 250, 350, 450, 550};
+
+	for (auto v : testValues) 
+	{
+		testSet.insert(v);
+	}
+
+	std::sort(testValues.begin(), testValues.end());
+	size_t index = 0;
+
+	for (const auto& v : testSet) 
+	{
+		ASSERT_EQ(v, testValues[index++]);
+	}
+
+	return;
+}
+
+TEST_F(SetTests, Comparator)
+{
+	std::array testValues = {400, 300, 500, 250, 350, 450, 550};
+
+	stu::set<int, std::greater<int>> testSetGreater{};
+
+	for (auto v : testValues)
+	{
+		testSetGreater.insert(v);
+	}
+
+	std::sort(testValues.begin(), testValues.end(), std::greater<int>());
+	size_t index = 0;
+
+	for (const auto& v : testSetGreater)
+	{
+		ASSERT_EQ(v, testValues[index++]);
+	}
+
+	return;
 }

@@ -5,6 +5,7 @@ set (CMAKE_CXX_STANDARD 23)
 project(BTree)
 
 # Enable testing
+include(CTest)
 enable_testing()
 
 add_library(stu INTERFACE

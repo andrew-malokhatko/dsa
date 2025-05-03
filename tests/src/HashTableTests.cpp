@@ -41,7 +41,7 @@ TEST_F(HashTableTests, TestInsert)
 	ASSERT_TRUE(table.contains(30));
 }
 
-/*
+
 TEST_F(HashTableTests, TestInsertCollision)
 {
 	stu::hashtable<int, int> table(10);
@@ -63,6 +63,7 @@ TEST_F(HashTableTests, TestInsertCollision)
 	ASSERT_TRUE(table.contains(40));
 	ASSERT_TRUE(table.contains(50));
 }
+
 
 TEST_F(HashTableTests, TestReserve)
 {
@@ -130,142 +131,142 @@ TEST_F(HashTableTests, RemoveTestNoCollision)
 	map.remove(40);
 }
 
-std::vector<stu::hashtable<int, int>::Node> parseFileMap(std::ifstream& file, int reserve = 1000)
-{
-	std::vector<stu::hashtable<int, int>::Node> nodes;
-	nodes.reserve(reserve);
+//std::vector<stu::hashtable<int, int>::Node> parseFileMap(std::ifstream& file, int reserve = 1000)
+//{
+//	std::vector<stu::hashtable<int, int>::Node> nodes;
+//	nodes.reserve(reserve);
+//
+//	std::string line;
+//	int key;
+//	int value;
+//	char separator;
+//
+//	while (std::getline(file, line))
+//	{
+//		std::istringstream iss(line);
+//
+//		iss >> key >> separator >> value;
+//
+//		nodes.emplace_back(key, value);
+//	}
+//
+//	return nodes;
+//}
 
-	std::string line;
-	int key;
-	int value;
-	char separator;
+//// Returns a vector sorted by keys
+//std::vector<stu::hashtable<int, int>::Node> parseTable(const stu::hashtable<int, int>& table)
+//{
+//	using Bucket = stu::hashtable<int, int>::Bucket;
+//	using Node = stu::hashtable<int, int>::Node;
+//
+//	std::vector<Node> result;
+//	result.reserve(table.getCount());
+//	Bucket* buckets = table.getBuckets();
+//
+//	for (size_t i = 0; i < table.getCapacity(); ++i)
+//	{
+//		Bucket bucket = buckets[i];
+//		Node* current = bucket.root;
+//
+//		while (current)
+//		{
+//			result.push_back(*current);
+//
+//			current = current->next;
+//		}
+//	}
+//
+//	std::sort(result.begin(),result.end(),
+//		[](const Node& a, const Node& b)
+//		{
+//			return a.m_key < b.m_key;
+//		});
+//
+//	return result;
+//}
 
-	while (std::getline(file, line))
-	{
-		std::istringstream iss(line);
-
-		iss >> key >> separator >> value;
-
-		nodes.emplace_back(key, value);
-	}
-
-	return nodes;
-}
-
-		// Returns a vector sorted by keys
-std::vector<stu::hashtable<int, int>::Node> parseTable(const stu::hashtable<int, int>& table)
-{
-	using Bucket = stu::hashtable<int, int>::Bucket;
-	using Node = stu::hashtable<int, int>::Node;
-
-	std::vector<Node> result;
-	result.reserve(table.getCount());
-	Bucket* buckets = table.getBuckets();
-
-	for (size_t i = 0; i < table.getCapacity(); ++i)
-	{
-		Bucket bucket = buckets[i];
-		Node* current = bucket.root;
-
-		while (current)
-		{
-			result.push_back(*current);
-
-			current = current->next;
-		}
-	}
-
-	std::sort(result.begin(),result.end(),
-		[](const Node& a, const Node& b)
-		{
-			return a.m_key < b.m_key;
-		});
-
-	return result;
-}
-
-void HashTableFileTest(std::string functionName, std::string_view fileName)
-{
-	using Bucket = stu::hashtable<int, int>::Bucket;
-	using Node = stu::hashtable<int, int>::Node;
-
-	std::cout << "\n" << functionName << "\n";
-
-	std::ifstream file(fileName.data());
-
-	ASSERT_TRUE(file.is_open());
-
-	stu::hashtable<int, int> table;
-	std::string line;
-	std::string command;
-	int count = 0;
-
-	std::chrono::nanoseconds insertTime{};
-	std::chrono::nanoseconds searchTime{};
-	std::chrono::nanoseconds removeTime{};
-
-	// std::chrono::high_resolution_clock
-	while (std::getline(file, line))
-	{
-		command.clear();
-		count++;
-
-		std::istringstream iss(line);
-		int key;
-		int value;
-		char separator;
-
-		iss >> command >> key;
-
-		if (command == "INSERT" && iss >> separator >> value)
-		{
-			auto start = std::chrono::high_resolution_clock::now();
-
-			table.insert(key, value);
-
-			auto end = std::chrono::high_resolution_clock::now();
-			insertTime += end - start;
-		}
-		else if (command == "DELETE")
-		{
-			auto start = std::chrono::high_resolution_clock::now();
-
-			table.remove(key);
-
-			auto end = std::chrono::high_resolution_clock::now();
-			removeTime += end - start;
-		}
-		else if (command == "SEARCH" && iss >> separator >> value)
-		{
-			auto start = std::chrono::high_resolution_clock::now();
-
-			int resultValue = table.search(key);
-
-			auto end = std::chrono::high_resolution_clock::now();
-			searchTime += end - start;
-
-			ASSERT_EQ(value, resultValue);
-		}
-		else
-		{
-			break;
-		}
-	}
-
-	std::vector<Node> expected = parseFileMap(file);
-	std::vector<Node> actual = parseTable(table);
-
-	ASSERT_EQ(expected.size(), actual.size());
-
-	std::cout << "InsertTime: " << std::chrono::duration_cast<std::chrono::milliseconds>(insertTime).count() << "\n";
-	std::cout << "SearchTime: " << std::chrono::duration_cast<std::chrono::milliseconds>(searchTime).count() << "\n";
-	std::cout << "RemoveTime: " << std::chrono::duration_cast<std::chrono::milliseconds>(removeTime).count() << "\n";
-	std::cout << "\n";
-
-	table.~table();
-
-	EXPECT_EQ(expected, actual);
-}
+//void HashTableFileTest(std::string functionName, std::string_view fileName)
+//{
+//	using Bucket = stu::hashtable<int, int>::Bucket;
+//	using Node = stu::hashtable<int, int>::Node;
+//
+//	std::cout << "\n" << functionName << "\n";
+//
+//	std::ifstream file(fileName.data());
+//
+//	ASSERT_TRUE(file.is_open());
+//
+//	stu::hashtable<int, int> table;
+//	std::string line;
+//	std::string command;
+//	int count = 0;
+//
+//	std::chrono::nanoseconds insertTime{};
+//	std::chrono::nanoseconds searchTime{};
+//	std::chrono::nanoseconds removeTime{};
+//
+//	// std::chrono::high_resolution_clock
+//	while (std::getline(file, line))
+//	{
+//		command.clear();
+//		count++;
+//
+//		std::istringstream iss(line);
+//		int key;
+//		int value;
+//		char separator;
+//
+//		iss >> command >> key;
+//
+//		if (command == "INSERT" && iss >> separator >> value)
+//		{
+//			auto start = std::chrono::high_resolution_clock::now();
+//
+//			table.insert(key, value);
+//
+//			auto end = std::chrono::high_resolution_clock::now();
+//			insertTime += end - start;
+//		}
+//		else if (command == "DELETE")
+//		{
+//			auto start = std::chrono::high_resolution_clock::now();
+//
+//			table.remove(key);
+//
+//			auto end = std::chrono::high_resolution_clock::now();
+//			removeTime += end - start;
+//		}
+//		else if (command == "SEARCH" && iss >> separator >> value)
+//		{
+//			auto start = std::chrono::high_resolution_clock::now();
+//
+//			int resultValue = table.search(key);
+//
+//			auto end = std::chrono::high_resolution_clock::now();
+//			searchTime += end - start;
+//
+//			ASSERT_EQ(value, resultValue);
+//		}
+//		else
+//		{
+//			break;
+//		}
+//	}
+//
+//	std::vector<Node> expected = parseFileMap(file);
+//	std::vector<Node> actual = parseTable(table);
+//
+//	ASSERT_EQ(expected.size(), actual.size());
+//
+//	std::cout << "InsertTime: " << std::chrono::duration_cast<std::chrono::milliseconds>(insertTime).count() << "\n";
+//	std::cout << "SearchTime: " << std::chrono::duration_cast<std::chrono::milliseconds>(searchTime).count() << "\n";
+//	std::cout << "RemoveTime: " << std::chrono::duration_cast<std::chrono::milliseconds>(removeTime).count() << "\n";
+//	std::cout << "\n";
+//
+//	table.~table();
+//
+//	EXPECT_EQ(expected, actual);
+//}
 
 //TEST_F(HashTableTests, InsertFileTest)
 //{
@@ -276,4 +277,3 @@ void HashTableFileTest(std::string functionName, std::string_view fileName)
 //{
 //	HashTableFileTest(__FUNCTION__, HashTableTests::dictRemoveTestFile);
 //}
-*/

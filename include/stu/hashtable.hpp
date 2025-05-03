@@ -16,7 +16,7 @@ namespace stu
 				key_type m_key;
 				value_type m_value;
 
-				BucketNode* next;
+				BucketNode* next = nullptr;
 
 				BucketNode(key_type key, value_type value, BucketNode* n = nullptr)
 					: m_key(key),
@@ -45,9 +45,14 @@ namespace stu
 					return temp;
 				}
 
-				const BucketNode& operator*()
+				const BucketNode& operator*() const
 				{
-					return n;
+					return *n;
+				}
+
+				BucketNode& operator*()
+				{
+					return *n;
 				}
 
 				bool operator==(const Iterator& other) const
@@ -70,7 +75,8 @@ namespace stu
 				}
 			}
 
-			// POTENTIAL MEMORY LEAK!!!!
+			// ALERT! If this function returns false, then it does not take ownership of node, and it must be manually dealocated!
+			//
 			bool insert(BucketNode* node)
 			{
 				BucketNode* current = m_first;
@@ -93,7 +99,23 @@ namespace stu
 
 			bool insert(key_type key, value_type value)
 			{
-				insert(new BucketNode(key, value));
+				BucketNode* current = m_first;
+				while (current != nullptr)
+				{
+					if (current->m_key == key)
+					{
+						return false; // Key exists, value updated
+					}
+
+					current = current->next;
+				}
+
+				auto node = new BucketNode(key, value);
+				node->next = m_first;
+				m_first = node;
+
+				m_size++;
+				return true; // New key inserted
 			}
 
 			bool remove(key_type key)
@@ -186,26 +208,24 @@ namespace stu
 			return hash + 89;
 		}
 
-		size_t getHash(const key_type& key) const
+		size_t getBucketIndex(const key_type& key) const
 		{
 			return hash(static_cast<const void*>(&key), sizeof(key_type)) % m_capacity;
 		}
 
 		Bucket& getBucket(const key_type& key)
 		{
-			size_t index = getHash(key);
-
-			return m_buckets[index];
+			return m_buckets[getBucketIndex(key)];
 		}
 
 		const Bucket& getBucket(const key_type& key) const
 		{
-			return m_buckets[getHash(key) % m_capacity];
+			return m_buckets[getBucketIndex(key)];
 		}
 
 	public:
 
-		hashtable(size_t capacity = 500)
+		hashtable(size_t capacity = 16)
 		{
 			reserve(capacity);
 		}
@@ -269,11 +289,21 @@ namespace stu
 			for (size_t i = 0; i < oldCapacity; i++)
 			{
 				Bucket& oldBucket = oldBuckets[i];
-				
-				for (auto node : oldBucket)
+
+				for (auto it = oldBucket.begin(); it != oldBucket.end();)
 				{
+					auto& node = *it;
+					++it;
+					node.next = nullptr;
 					Bucket& newBucket = getBucket(node.m_key);
-					newBucket.insert(&node);
+					
+					bool inserted = newBucket.insert(&node);
+					
+					assert(inserted);
+					if (inserted == false)
+					{
+						delete (&node);
+					}
 				}
 
 				oldBucket.m_first = nullptr;

@@ -288,6 +288,21 @@ namespace stu
 			return false;
 		}
 
+		value_type& max()
+		{
+			if (!m_root)
+			{
+				return value_type{};
+			}
+
+			Node* current = m_root;
+			while (current && current->right)
+			{
+				current = current->right;
+			}
+			return current->value;
+		}
+
 		size_t size() const
 		{
 			return m_size;

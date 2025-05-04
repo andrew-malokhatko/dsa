@@ -173,6 +173,8 @@ void testFromFileBdd2(std::string functionName, std::string_view fileName)
 	stu::bdd2 bdd(formula, order);
 	std::cout << "Reduction rate: " << bdd.getReduction() << "\n\n";
 
+	bdd.createBestOrder(formula, order, 10);
+
 	// check if it's correct
 	std::string line;
 

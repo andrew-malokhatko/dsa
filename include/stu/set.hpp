@@ -315,6 +315,11 @@ namespace stu
 			return m_root;
 		}
 
+		[[ nodiscard ]] bool empty() const
+		{
+			return m_size == 0;
+		}
+
 	private:
 		void clear(Node* node)
 		{

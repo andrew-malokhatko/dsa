@@ -283,4 +283,14 @@ namespace stu
 		while (!isPrime(n)) ++n;
 		return n;
 	}
+
+	inline size_t pow(int n, int pow)
+	{
+		int res = 1;
+		for (int i = 0; i < pow; i++)
+		{
+			res *= n;
+		}
+		return res;
+	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include "utils.hpp"
 #include "unique_list.hpp"
 #include "set.hpp"
@@ -149,55 +150,44 @@ namespace stu
 
 			bool contains(const key_type& key) const
 			{
-				BucketNode* current = m_first;
-				while (current != nullptr)
-				{
-					if (current->m_key == key)
-					{
-						return true;
-					}
-					current = current->next;
-				}
-
-				return false;
+				return search(key) != end();
 			}
 
 			// Preferably should be used after contains
-			const value_type& search(const key_type& key) const
+			const Iterator search(const key_type& key) const
 			{
-				BucketNode* current = m_first;
-				while (current != nullptr)
+				for (auto it = begin(), e = end(); it != e; ++it)
 				{
-					if (current->m_key == key)
+					if ((*it).m_key == key)
 					{
-						return current->m_value;
+						return it;
 					}
-					current = current->next;
 				}
 
-				return value_type{};
+				return end();
 			}
 
-			value_type& search(const key_type& key)
+			Iterator search(const key_type& key)
 			{
-				BucketNode* current = m_first;
-				while (current != nullptr)
+				for (auto it = begin(), e = end(); it != e; ++it)
 				{
-					if (current->m_key == key)
+					if ((*it).m_key == key)
 					{
-						return current->m_value;
+						return it;
 					}
-					current = current->next;
 				}
 
-				// Insert default value at key if it was not found
-				insert(key, value_type{});
-				return search(key);
+				return end();
 			}
 
 			bool empty() const
 			{
 				return m_size == 0;
+			}
+
+			const Iterator begin() const
+			{
+				return Iterator(m_first);
 			}
 
 			Iterator begin()
@@ -206,6 +196,11 @@ namespace stu
 			}
 
 			Iterator end()
+			{
+				return Iterator(nullptr);
+			}
+
+			const Iterator end() const
 			{
 				return Iterator(nullptr);
 			}
@@ -226,7 +221,8 @@ namespace stu
 				bucket_index(index),
 				capacity(cap),
 				node(node_it)
-			{}
+			{
+			}
 
 			Iterator& operator++()
 			{
@@ -278,7 +274,8 @@ namespace stu
 
 		size_t getBucketIndex(const key_type& key) const
 		{
-			return hash(static_cast<const void*>(&key), sizeof(key_type)) % m_capacity;
+			auto h = std::hash<key_type>{}(key); // hash(static_cast<const void*>(&key), sizeof(key_type));
+			return h % m_capacity;
 		}
 
 		Bucket& getBucket(const key_type& key)
@@ -301,7 +298,15 @@ namespace stu
 
 		~hashtable()
 		{
+			clear();
+		}
+
+		void clear()
+		{
 			delete[] m_buckets;
+			m_buckets = nullptr;
+			m_count = 0;
+			m_capacity = 0;
 		}
 
 
@@ -317,13 +322,13 @@ namespace stu
 
 			if (loadFactor() > maxLoadFactor)
 			{
-				reserve(m_capacity * treshold);
+				reserve(std::max((size_t)(m_capacity * treshold), m_count));
 			}
 
 			return result;
 		}
 
-		bool remove(key_type key)
+		bool erase(key_type key)
 		{
 			Bucket& bucket = getBucket(key);
 			bool removed = bucket.remove(key);
@@ -336,11 +341,32 @@ namespace stu
 			return removed;
 		}
 
-		const value_type& search(key_type key) const
+		const Iterator search(key_type key) const
 		{
 			const Bucket& bucket = getBucket(key);
 			
-			return bucket.search(key);
+			auto bit = bucket.search(key);
+			if (bit == bucket.end())
+			{
+				return end();
+			}
+
+			size_t bucketIndex = getBucketIndex(key);
+			return Iterator{m_buckets, bucketIndex, m_capacity, bit};
+		}
+
+		Iterator search(key_type key)
+		{
+			 Bucket& bucket = getBucket(key);
+
+			auto bit = bucket.search(key);
+			if (bit == bucket.end())
+			{
+				return end();
+			}
+
+			size_t bucketIndex = getBucketIndex(key);
+			return Iterator{ m_buckets, bucketIndex, m_capacity, bit };
 		}
 
 		bool contains(key_type key) const
@@ -392,6 +418,11 @@ namespace stu
 
 		double loadFactor()
 		{
+			if (m_capacity == 0)
+			{
+				return 0;
+			}
+
 			return (double)m_count / m_capacity;
 		}
 
@@ -440,20 +471,19 @@ namespace stu
 
 		value_type& operator[](const key_type& key)
 		{
-			Bucket& bucket = getBucket(key);
-
-			if (!bucket.contains(key))
+			if (!contains(key))
 			{
 				// insert with hashtable function to increment count
 				insert(key, value_type{});
 			}
 
-			return bucket.search(key);
+			auto it = search(key);
+			return (*it).m_value;
 		}
 	
 	private:
 		double maxLoadFactor = 1.0;
-		double treshold = 2.0;
+		const double treshold = 2.0;
 
 		size_t m_capacity{};
 		size_t m_count{};

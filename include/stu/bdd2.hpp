@@ -1,17 +1,17 @@
 #pragma once
 
+#include "set.hpp"
+#include "hashtable.hpp"
+
 #include <string>
 #include <cassert>
-#include <unordered_map>
-#include <set>
+#include <algorithm>
 #include "utils.hpp"
 
 namespace stu
 {
 	class bdd2
 	{
-	public:
-
 		struct Node;
 
 		struct NodeFormulaLengthCompare
@@ -32,13 +32,18 @@ namespace stu
 			}
 		};
 
+		using set_t = stu::set<Node*, NodeFormulaLengthCompare>;
+		using map_t = stu::hashtable<std::string, Node*>;
+		//using map_t = std::unordered_map<std::string, Node*>;
+
+	public:
+
 		struct Node
 		{
 			std::string formula{};
 			char var{};
 
-			//list<Node*> parents{};
-			std::set<Node*, NodeFormulaLengthCompare> parents{};
+			set_t parents{};
 			Node* low{};
 			Node* high{};
 
@@ -96,12 +101,14 @@ namespace stu
 
 		void clear()
 		{
-			for (auto& [formula, node] : m_nodes)
+			for (auto& node: m_nodes)
 			{
-				delete node;
+				delete node.m_value;
+				node.m_value = nullptr;
 			}
 
 			m_nodes.clear();
+			m_root = nullptr;
 		}
 
 		void create(std::string formula, std::string order)
@@ -121,6 +128,20 @@ namespace stu
 
 			createRecursive(m_root, 0);
 		}
+
+		//bdd2& createBestOrder(std::string formula, std::string order, size_t attempts)
+		//{
+		//	size_t maxPermutations = pow(2, order.size());
+		//	attempts = std::min(maxPermutations, attempts);
+
+		//	for (int i = 0; i < order.size(); i++)
+		//	{
+		//		for (int k = i; k < order.size(); k++)
+		//		{
+
+		//		}	
+		//	}
+		//}
 
 		bool use(std::string input) const
 		{
@@ -160,9 +181,14 @@ namespace stu
 			return current->getValue();
 		}
 
-		const Node* getRoot()
+		const Node* getRoot() const
 		{
 			return m_root;
+		}
+
+		const double getReduction() const
+		{
+			return 1.0 - ((double)m_nodes.getCount() / (pow(2, m_order.size() + 1) - 1));
 		}
 
 	private:
@@ -176,7 +202,7 @@ namespace stu
 			{
 				// Move parents from parent to temporary set
 				// Not to left directly as it may be deleted further in the recursion
-				std::set<Node*, NodeFormulaLengthCompare> p_parents = parent->parents;
+				set_t p_parents = parent->parents;
 				low->parents = std::move(parent->parents);
 
 				// Substitute parent in other nodes (it's parents)
@@ -271,6 +297,6 @@ namespace stu
 		std::string m_formula;
 		std::string m_order;
 
-		std::unordered_map<std::string, Node*> m_nodes;
+		map_t m_nodes;
 	};
 }

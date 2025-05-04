@@ -157,7 +157,7 @@ void testFromFileBdd2(std::string functionName, std::string_view fileName)
 	std::ifstream file(fileName.data());
 	if (!file.is_open())
 	{
-		std::cout << "\n\n\nERROR : File was not opened\n\n\n";
+		std::cout << "\n\n\nERROR : File was not opened:" << fileName << "\n\n\n";
 	}
 
 	ASSERT_TRUE(file.is_open());
@@ -171,6 +171,7 @@ void testFromFileBdd2(std::string functionName, std::string_view fileName)
 	std::getline(file, order);
 
 	stu::bdd2 bdd(formula, order);
+	std::cout << "Reduction rate: " << bdd.getReduction() << "\n\n";
 
 	// check if it's correct
 	std::string line;

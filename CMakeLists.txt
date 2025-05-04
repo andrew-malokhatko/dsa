@@ -4,6 +4,9 @@ set (CMAKE_CXX_STANDARD 23)
 
 project(BTree)
 
+#add_compile_options(-fsanitize=address)
+#add_link_options(-fsanitize=address)
+
 # Enable testing
 include(CTest)
 enable_testing()

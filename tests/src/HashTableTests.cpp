@@ -125,10 +125,10 @@ TEST_F(HashTableTests, RemoveTestNoCollision)
 	map.insert(30, 300);
 	map.insert(40, 300);
 
-	map.remove(10);
-	map.remove(20);
-	map.remove(30);
-	map.remove(40);
+	map.erase(10);
+	map.erase(20);
+	map.erase(30);
+	map.erase(40);
 
 	ASSERT_TRUE(map.getCount() == 0);
 }
@@ -144,9 +144,9 @@ TEST_F(HashTableTests, TestReserve2)
 	map.insert(50, 300); // reserve here
 	map.insert(60, 300); // 
 
-	map.remove(10);
-	map.remove(20);
-	map.remove(30);
+	map.erase(10);
+	map.erase(20);
+	map.erase(30);
 
 	ASSERT_TRUE(map.contains(40));
 	ASSERT_TRUE(map.contains(50));
@@ -158,9 +158,9 @@ TEST_F(HashTableTests, TestReserve2)
 
 	ASSERT_EQ(map.getCount(), 3);
 
-	map.remove(40);
-	map.remove(50);
-	map.remove(60);
+	map.erase(40);
+	map.erase(50);
+	map.erase(60);
 
 	ASSERT_TRUE(map.empty());
 }

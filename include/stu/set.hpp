@@ -24,6 +24,21 @@ namespace stu
 			{
 			}
 
+			// Copy constructor
+			Node(const Node& other, Node* parent = nullptr)
+				: value{ other.value },
+				parent{ parent }
+			{
+				if (other.left)
+				{
+					left = new Node(*other.left, this);
+				}
+				if (other.right)
+				{
+					right = new Node(*other.right, this);
+				}
+			}
+
 			~Node()
 			{
 				delete left;
@@ -113,6 +128,55 @@ namespace stu
 	public:
 		set()
 		{
+		}
+
+		// Copy constructor (does not copy comparator !!!!)
+		set(const set& other)
+		{
+			if (other.m_root)
+			{
+				m_root = new Node(*other.m_root, nullptr);
+			}
+			else
+			{
+				m_root = nullptr;
+			}
+
+			m_size = other.m_size;
+		}
+
+		// Move constructor
+		set(set&& other) noexcept
+		{
+			m_root = other.m_root;
+			m_size = other.m_size;
+
+			other.m_root = nullptr;
+			other.m_size = 0;
+		}
+
+		// Copy assignment operator
+		set& operator=(const set& other)
+		{
+			*this = set(other);
+			return *this;
+		}
+
+		// Move assignment operator
+		set& operator=(set&& other) noexcept
+		{
+			if (this != &other)
+			{
+				clear();
+
+				m_root = other.m_root;
+				m_size = other.m_size;
+
+				other.m_root = nullptr;
+				other.m_size = 0;
+			}
+
+			return *this;
 		}
 
 		~set()
@@ -243,6 +307,12 @@ namespace stu
 		Iterator end()
 		{
 			return Iterator{nullptr};
+		}
+
+		// Only for tesing!!!
+		Node* root()
+		{
+			return m_root;
 		}
 
 	private:

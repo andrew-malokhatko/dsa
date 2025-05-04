@@ -100,6 +100,8 @@ namespace stu
 			{
 				delete node;
 			}
+
+			m_nodes.clear();
 		}
 
 		void create(std::string formula, std::string order)

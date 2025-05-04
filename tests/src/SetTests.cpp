@@ -192,3 +192,116 @@ TEST_F(SetTests, Comparator)
 
 	return;
 }
+
+TEST_F(SetTests, CopyConstructor)
+{
+	std::array testValues = {400, 300, 500, 250, 350, 450, 550};
+
+	for (auto v : testValues)
+	{
+		testSet.insert(v);
+	}
+
+	stu::set<int> copy = testSet;
+
+	// Different addresses
+	ASSERT_NE(copy.root(), testSet.root());
+	ASSERT_NE(copy.root()->left, testSet.root()->left);
+	ASSERT_NE(copy.root()->right, testSet.root()->right);
+
+	// Same Values
+	ASSERT_EQ(copy.root()->value, testSet.root()->value);
+	ASSERT_EQ(copy.root()->left->value, testSet.root()->left->value);
+	ASSERT_EQ(copy.root()->right->value, testSet.root()->right->value);
+}
+
+TEST_F(SetTests, MoveConstructor)
+{
+	std::array testValues = {400, 300, 500, 250, 350, 450, 550};
+
+	for (auto v : testValues)
+	{
+		testSet.insert(v);
+	}
+
+	stu::set<int> moved = std::move(testSet);
+
+	ASSERT_EQ(testSet.root(), nullptr);
+	ASSERT_EQ(testSet.size(), 0);
+
+	ASSERT_EQ(moved.size(), 7);
+
+	for (const auto& val : testValues)
+	{
+		ASSERT_TRUE(moved.contains(val));
+	}
+}
+
+TEST_F(SetTests, MoveAssignmentOperator)
+{
+	std::array testValues = {400, 300, 500, 250, 350, 450, 550};
+	std::array testValues2 = {1, 2, 3};
+
+	for (auto v : testValues)
+	{
+		testSet.insert(v);
+	}
+
+	stu::set<int> movedLater;
+
+	for (auto v : testValues2)
+	{
+		movedLater.insert(v);
+	}
+
+	// Move values from testSet to movedLater
+	movedLater = std::move(testSet);
+
+	ASSERT_EQ(testSet.root(), nullptr);
+	ASSERT_EQ(testSet.size(), 0);
+
+	ASSERT_EQ(movedLater.size(), 7);
+	
+	for (const auto& val : testValues)
+	{
+		ASSERT_TRUE(movedLater.contains(val));
+	}
+
+	for (const auto& val : testValues2)
+	{
+		ASSERT_FALSE(movedLater.contains(val));
+	}
+}
+
+TEST_F(SetTests, CopyAssignmentOperator)
+{
+	std::array testValues = {400, 300, 500, 250, 350, 450, 550};
+	std::array testValues2 = {1, 2, 3};
+
+	for (auto v : testValues)
+	{
+		testSet.insert(v);
+	}
+
+	stu::set<int> copiedLater;
+
+	for (auto v : testValues2)
+	{
+		copiedLater.insert(v);
+	}
+
+	copiedLater = testSet;
+
+	ASSERT_EQ(copiedLater.size(), 7);
+	ASSERT_EQ(testSet.size(), 7);
+
+	// Different addresses
+	ASSERT_NE(copiedLater.root(), testSet.root());
+	ASSERT_NE(copiedLater.root()->left, testSet.root()->left);
+	ASSERT_NE(copiedLater.root()->right, testSet.root()->right);
+
+	// Same Values
+	ASSERT_EQ(copiedLater.root()->value, testSet.root()->value);
+	ASSERT_EQ(copiedLater.root()->left->value, testSet.root()->left->value);
+	ASSERT_EQ(copiedLater.root()->right->value, testSet.root()->right->value);
+}

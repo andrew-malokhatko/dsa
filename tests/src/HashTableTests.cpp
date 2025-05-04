@@ -165,6 +165,98 @@ TEST_F(HashTableTests, TestReserve2)
 	ASSERT_TRUE(map.empty());
 }
 
+TEST_F(HashTableTests, IterationEmpty)
+{
+	stu::hashtable<int, int> map;
+
+	for (auto& it : map)
+	{
+		std::cout << it.m_key << " : " << it.m_value << "\n";
+	}
+}
+
+TEST_F(HashTableTests, Iteration)
+{
+	stu::hashtable<int, int> map;
+
+	map.insert(10, 100);
+	map.insert(20, 200);
+	map.insert(30, 300);
+	map.insert(40, 400);
+	map.insert(50, 500);
+	map.insert(60, 600);
+
+	for (auto& it : map)
+	{
+		std::cout << it.m_key << " : " << it.m_value << "\n";
+	}
+}
+
+TEST_F(HashTableTests, IterationWithCollisions)
+{
+	stu::hashtable<int, int> map(5);
+	map.setMaxLoadFactor(2.0);
+
+	map.insert(10, 100);
+	map.insert(20, 200);
+	map.insert(30, 300);
+	map.insert(40, 400);
+	map.insert(50, 500);
+	map.insert(60, 600);
+
+	for (auto& it : map)
+	{
+		std::cout << it.m_key << " : " << it.m_value << "\n";
+	}
+}
+
+TEST_F(HashTableTests, BracketsOperator)
+{
+	stu::hashtable<int, int> map;
+
+	map.insert(10, 100);
+	map.insert(20, 200);
+	map.insert(30, 300);
+	map.insert(40, 400);
+	map.insert(50, 500);
+	map.insert(60, 600);
+
+	ASSERT_EQ(100, map[10]);
+	ASSERT_EQ(200, map[20]);
+	ASSERT_EQ(300, map[30]);
+	ASSERT_EQ(400, map[40]);
+	ASSERT_EQ(500, map[50]);
+	ASSERT_EQ(600, map[60]);
+
+	ASSERT_NE(100, map[0]);	// value 0 inserted at 0	+1 element
+	
+	ASSERT_EQ(map.getCount(), 7);
+
+	ASSERT_EQ(0, map[0]);
+}
+
+TEST_F(HashTableTests, InsertBracketsOperator)
+{
+	stu::hashtable<int, int> map;
+
+	map[10] = 100;
+	map[20] = 200;
+	map[30] = 300;
+	map[40] = 400;
+	map[50] = 500;
+	map[60] = 600;
+
+	ASSERT_EQ(map.getCount(), 6);
+	ASSERT_EQ(100, map[10]);
+	ASSERT_EQ(200, map[20]);
+	ASSERT_EQ(300, map[30]);
+	ASSERT_EQ(400, map[40]);
+	ASSERT_EQ(500, map[50]);
+	ASSERT_EQ(600, map[60]);
+}
+
+
+
 //std::vector<stu::hashtable<int, int>::Node> parseFileMap(std::ifstream& file, int reserve = 1000)
 //{
 //	std::vector<stu::hashtable<int, int>::Node> nodes;

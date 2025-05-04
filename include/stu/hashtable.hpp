@@ -26,6 +26,7 @@ namespace stu
 				}
 			};
 
+			// Iterator for Bucket
 			struct Iterator
 			{
 				BucketNode* n;
@@ -177,6 +178,23 @@ namespace stu
 				return value_type{};
 			}
 
+			value_type& search(const key_type& key)
+			{
+				BucketNode* current = m_first;
+				while (current != nullptr)
+				{
+					if (current->m_key == key)
+					{
+						return current->m_value;
+					}
+					current = current->next;
+				}
+
+				// Insert default value at key if it was not found
+				insert(key, value_type{});
+				return search(key);
+			}
+
 			bool empty() const
 			{
 				return m_size == 0;
@@ -190,6 +208,56 @@ namespace stu
 			Iterator end()
 			{
 				return Iterator(nullptr);
+			}
+		};
+
+	public:
+
+		// Iterator for a hashtable
+		struct Iterator
+		{
+			Bucket* buckets;							// Pointer to bucket array
+			size_t bucket_index;						// Current bucket index
+			size_t capacity;
+			typename Bucket::Iterator node;				// Iterator for current bucket
+
+			Iterator(Bucket* b, size_t index, size_t cap, typename Bucket::Iterator node_it) :
+				buckets(b),
+				bucket_index(index),
+				capacity(cap),
+				node(node_it)
+			{}
+
+			Iterator& operator++()
+			{
+				++node;
+				while (bucket_index + 1 < capacity && node == buckets[bucket_index].end())
+				{
+					node = buckets[++bucket_index].begin(); // Move to next bucket's begin
+				}
+				return *this;
+			}
+
+			Iterator operator++(int)
+			{
+				Iterator temp = *this;
+				++(*this);
+				return temp;
+			}
+
+			const typename Bucket::BucketNode& operator*() const
+			{
+				return *node;
+			}
+
+			typename Bucket::BucketNode& operator*()
+			{
+				return *node;
+			}
+
+			bool operator==(const Iterator& other) const
+			{
+				return node == other.node && bucket_index == other.bucket_index;
 			}
 		};
 
@@ -347,6 +415,41 @@ namespace stu
 			return m_count == 0;
 		}
 
+		Iterator begin()
+		{
+			size_t index = 0;
+			auto node = m_buckets[0].begin();
+			while (index + 1 < m_capacity && node == m_buckets[index].end())
+			{
+				node = m_buckets[++index].begin();
+			}
+			return Iterator(m_buckets, index, m_capacity, node);
+		}
+
+		Iterator end()
+		{
+			// Return the end of the last bucket iterator
+			size_t lastBucketIndex = m_capacity - 1;
+			return Iterator(m_buckets, lastBucketIndex , m_capacity, m_buckets[lastBucketIndex].end());
+		}
+
+		const value_type& operator[](const key_type& key) const
+		{
+			return search(key);
+		}
+
+		value_type& operator[](const key_type& key)
+		{
+			Bucket& bucket = getBucket(key);
+
+			if (!bucket.contains(key))
+			{
+				// insert with hashtable function to increment count
+				insert(key, value_type{});
+			}
+
+			return bucket.search(key);
+		}
 	
 	private:
 		double maxLoadFactor = 1.0;

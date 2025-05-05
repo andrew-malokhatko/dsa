@@ -9,15 +9,17 @@
 #include <iostream>
 #include "utils.hpp"
 
+#define DEBUG_BDD2
+
 namespace stu
 {
 	class bdd2
 	{
 		struct Node;
 
+		// Longer formulas come first
 		struct NodeFormulaLengthCompare
 		{
-			// Longer formulas come first
 			bool operator()(const Node* a, const Node* b) const
 			{
 				assert(a);
@@ -30,6 +32,28 @@ namespace stu
 
 				// avoid duplicates becauuse comp(a,b) and comp(b,a) both false 
 				return a->formula < b->formula;
+			}
+		};
+
+		// bdd's with smaller reduction rate come first
+		struct BDDReductionComparator
+		{
+			bool operator()(const bdd2* a, const bdd2* b) const
+			{
+				assert(a);
+				assert(b);
+
+				/*if (a->getOrder() == b->getOrder() && a->getFormula() == b->getFormula())
+				{
+					return false;
+				}*/
+
+				if (a->getReduction() == b->getReduction())
+				{
+					return true;
+				}
+
+				return a->getReduction() < b->getReduction();
 			}
 		};
 
@@ -130,7 +154,7 @@ namespace stu
 			createRecursive(m_root, 0);
 		}
 
-		void createBestOrder(std::string formula, std::string order, size_t attempts)
+		double createBestOrder(std::string formula, std::string order, size_t attempts = SIZE_MAX)
 		{
 			assert(countUniqueVariables(formula) == countUniqueVariables(order));
 
@@ -141,22 +165,23 @@ namespace stu
 			m_order = std::move(order);
 			m_formula = std::move(formula);
 
-			size_t maxPermutations = pow(2, m_order.size());
+			size_t maxPermutations = fac(m_order.size());
 			attempts = std::min(maxPermutations, attempts);
 
-			stu::set<bdd2*> result;
-			createBestOrderRecursive(result, attempts, 0);
+			stu::set<bdd2*, BDDReductionComparator> result;
+			createBestOrderRecursive(result, attempts, m_order.size() - 1);
 
 			int count = 1;
-			std::cout << "Created " << result.size() << " BDD's with formula: " << m_formula << "\n\n";
+			double bestSize = 0.0;
+			//std::cout << "Created " << result.size() << " BDD's with formula: " << m_formula << "\n\n";
 			for (auto& res : result)
 			{
-				std::cout << count++ << ". " << "For order: " << res->getOrder() << " reduction: " << res->getReduction() << "\n";
+				//std::cout << count++ << ". " << "For order: " << res->getOrder() << " reduction: " << res->getReduction() << "\n";
+				bestSize = res->size();
 				delete res;
 			}
 
-			// store best 
-			//*this = result.max();
+			return bestSize;
 		}
 
 		bool use(std::string input) const
@@ -211,6 +236,16 @@ namespace stu
 		{
 			return m_order;
 		}
+
+		const std::string& getFormula() const
+		{
+			return m_formula;
+		}
+
+		const size_t size()
+		{
+			return m_nodes.getCount();
+		};
 
 		// Compares by reduction
 		bool operator<(const bdd2& other) const
@@ -318,27 +353,57 @@ namespace stu
 			createRecursive(high, order);
 		}
 
-		void createBestOrderRecursive(stu::set<bdd2*>& result, size_t& attempts, size_t left)
+		void createBestOrderRecursive(
+			stu::set<bdd2*, BDDReductionComparator>& result,
+			size_t& attempts, 
+			size_t right)
 		{
-			if (left == m_order.size() - 1 || left == m_order.size())
+			if (right == 0)
 			{
 				attempts--;
 				result.insert(new bdd2(m_formula, m_order));
 				return;
 			}
 
-			for (int i = left; i < m_order.size(); i++)
+			// important!!, signed type is required here
+			for (int i = right; i >= 0; i--)
 			{
 				if (attempts <= 0)
 				{
 					break;
 				}
 
-				std::swap(m_order[left], m_order[i]);
-				createBestOrderRecursive(result, attempts, left + 1);
-				std::swap(m_order[left], m_order[i]);
+				std::swap(m_order[right], m_order[i]);
+				createBestOrderRecursive(result, attempts, right - 1);
+				std::swap(m_order[right], m_order[i]);
 			}
 		}
+
+		
+		//void createBestOrderRecursive(
+		//	stu::set<bdd2*, BDDReductionComparator>& result,
+		//	size_t& attempts,
+		//	size_t left)
+		//{
+		//	if (left == m_order.size() - 1 || left == m_order.size())
+		//	{
+		//		attempts--;
+		//		result.insert(new bdd2(m_formula, m_order));
+		//		return;
+		//	}
+
+		//	for (int i = left; i < m_order.size(); i++)
+		//	{
+		//		if (attempts <= 0)
+		//		{
+		//			break;
+		//		}
+
+		//		std::swap(m_order[left], m_order[i]);
+		//		createBestOrderRecursive(result, attempts, left + 1);
+		//		std::swap(m_order[left], m_order[i]);
+		//	}
+		//}
 
 	private:
 		Node* m_root;
